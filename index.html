@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <title>સિક્યોરિટી કેમેરા કંટ્રોલ</title>
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #f0f0f0; }
+        video { width: 90%; max-width: 600px; background: #000; border-radius: 10px; margin-top: 10px; }
+        .controls { margin: 20px; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 5px; border: none; background: #007bff; color: white; }
+    </style>
+</head>
+<body>
+
+    <h2>સિક્યોરિટી કેમેરા લાઈવ</h2>
+    
+    <div id="status">કનેક્ટિંગ...</div>
+    
+    <video id="remoteVideo" autoplay playsinline></video>
+    <video id="localVideo" autoplay playsinline muted style="display:none;"></video>
+
+    <div class="controls">
+        <button onclick="startStream('user')">આગળનો કેમેરો</button>
+        <button onclick="startStream('environment')">પાછળનો કેમેરો</button>
+    </div>
+
+    <script>
+        const peer = new Peer(); // યુનિક આઈડી જનરેટ થશે
+        let localStream;
+
+        peer.on('open', (id) => {
+            document.getElementById('status').innerText = "તમારો ID: " + id;
+            console.log('My ID is: ' + id);
+        });
+
+        // કેમેરા સ્ટ્રીમ શરૂ કરવાનું ફંક્શન
+        async function startStream(cameraMode) {
+            const constraints = {
+                video: { facingMode: cameraMode },
+                audio: true
+            };
+
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia(constraints);
+                document.getElementById('localVideo').srcObject = localStream;
+                
+                // અહીં તમે બીજા ફોનનો ID નાખીને કૉલ કરી શકો છો
+                const remoteId = prompt("સામેના ફોનનો ID નાખો:");
+                const call = peer.call(remoteId, localStream);
+                
+                call.on('stream', (remoteStream) => {
+                    document.getElementById('remoteVideo').srcObject = remoteStream;
+                });
+            } catch (err) {
+                console.error("કેમેરા એક્સેસમાં ભૂલ: ", err);
+            }
+        }
+
+        // ઇનકમિંગ કૉલ રિસીવ કરવા માટે
+        peer.on('call', (call) => {
+            call.answer(localStream); 
+            call.on('stream', (remoteStream) => {
+                document.getElementById('remoteVideo').srcObject = remoteStream;
+            });
+        });
+    </script>
+</body>
+</html>
