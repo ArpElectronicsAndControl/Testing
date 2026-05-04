@@ -1,68 +1,370 @@
 <!DOCTYPE html>
 <html lang="gu">
 <head>
-    <title>સિક્યોરિટી કેમેરા કંટ્રોલ</title>
-    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Anand ❤️ Message Center</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js"></script>
+
     <style>
-        body { font-family: sans-serif; text-align: center; background: #f0f0f0; }
-        video { width: 90%; max-width: 600px; background: #000; border-radius: 10px; margin-top: 10px; }
-        .controls { margin: 20px; }
-        button { padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 5px; border: none; background: #007bff; color: white; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #e5ddd5; display: flex; justify-content: center; height: 100dvh; overflow: hidden; }
+        .chat-container { width: 100%; max-width: 500px; background: #efe7de; display: flex; flex-direction: column; height: 100%; position: relative; }
+        
+        .header { background: #075e54; color: white; padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; z-index: 10; height: 65px; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .user-profile { display: flex; align-items: center; gap: 10px; }
+        #displayPic { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 1.5px solid white; background: #eee; }
+        .user-details { display: flex; flex-direction: column; }
+        .user-name { font-size: 17px; font-weight: bold; }
+        .status { font-size: 11px; opacity: 0.9; }
+        .online-active { color: #25D366 !important; font-weight: bold; opacity: 1 !important; }
+
+        .three-dots { font-size: 24px; cursor: pointer; padding: 5px 10px; }
+        .dropdown-menu { position: absolute; right: 10px; top: 55px; background: white; color: black; box-shadow: 0 2px 10px rgba(0,0,0,0.2); border-radius: 5px; display: none; width: 160px; z-index: 100; }
+        .dropdown-menu div { padding: 12px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 14px; }
+
+        #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+        
+        .message { margin-bottom: 10px; padding: 8px 12px; border-radius: 8px; max-width: 85%; word-wrap: break-word; font-size: 15px; box-shadow: 0 1px 1px rgba(0,0,0,0.1); position: relative; cursor: pointer; }
+        .sent { align-self: flex-end; background: #dcf8c6; border-bottom-right-radius: 2px; }
+        .received { align-self: flex-start; background: white; border-bottom-left-radius: 2px; }
+        .msg-time { font-size: 10px; color: #667781; text-align: right; margin-top: 4px; display: block; }
+        .chat-img { max-width: 100%; border-radius: 5px; display: block; margin-top: 5px; background: #eee; min-height: 100px; }
+
+        .reply-container { background: rgba(0,0,0,0.05); border-left: 4px solid #075e54; padding: 5px 10px; margin-bottom: 5px; border-radius: 4px; font-size: 13px; color: #555; }
+        .reply-preview { display: none; background: #eee; padding: 8px; border-left: 4px solid #075e54; position: relative; }
+        .reply-preview span { display: block; font-size: 12px; font-weight: bold; color: #075e54; }
+        .close-reply { position: absolute; right: 5px; top: 5px; cursor: pointer; font-weight: bold; }
+
+        .emoji-menu { position: absolute; bottom: 70px; left: 10px; background: white; border-radius: 10px; padding: 10px; display: none; grid-template-columns: repeat(6, 1fr); gap: 10px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 20; }
+        .emoji-item { cursor: pointer; font-size: 24px; text-align: center; padding: 5px; }
+
+        .attach-menu { position: absolute; bottom: 70px; right: 60px; background: white; border-radius: 15px; padding: 15px; display: none; grid-template-columns: repeat(2, 1fr); gap: 20px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 20; }
+        .attach-item { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; font-size: 12px; }
+        .attach-icon { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; }
+
+        .bottom-bar { background: transparent; padding: 5px 8px 10px 8px; display: flex; flex-direction: column; gap: 0; }
+        .input-area-row { display: flex; align-items: flex-end; gap: 5px; width: 100%; }
+        .input-wrapper { display: flex; align-items: center; background: white; border-radius: 25px; flex: 1; padding: 2px 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+        .icon-btn { font-size: 22px; cursor: pointer; color: #858b8f; padding: 8px; }
+        input[type="text"] { flex: 1; border: none; outline: none; padding: 10px 5px; font-size: 16px; background: transparent; }
+        .action-btn { background: #00897b; color: white; width: 48px; height: 48px; border-radius: 50%; display: flex; justify-content: center; align-items: center; border: none; font-size: 20px; cursor: pointer; flex-shrink: 0; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { color: #075e54; border-bottom: 2px solid #075e54; margin-bottom: 20px; padding-bottom: 5px; font-size: 1.2rem; }
+        #myCurrentPhoto { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #075e54; display: block; margin: 0 auto 20px auto; background: #eee; }
+        .setting-group { margin-bottom: 15px; }
+        .setting-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #333; font-size: 14px; }
+        .setting-group input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; background: #f9f9f9; }
+        .modal-footer { margin-top: 25px; display: flex; justify-content: flex-end; gap: 10px; }
+        .modal-footer button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-cancel { background: #eee; color: #333; }
+        .btn-save { background: #075e54; color: white; }
+        #cropper-container { display: none; margin-top: 15px; padding: 10px; border: 1px dashed #075e54; }
     </style>
 </head>
 <body>
 
-    <h2>સિક્યોરિટી કેમેરા લાઈવ</h2>
+<div class="chat-container">
+    <div class="header">
+        <div class="user-profile">
+            <img id="displayPic" src="https://cdn-icons-png.flaticon.com/512/6997/6997662.png">
+            <div class="user-details">
+                <span class="user-name" id="displayHeaderName">Manisha ❤️</span>
+                <span class="status" id="onlineStatus">Connecting...</span>
+            </div>
+        </div>
+        <div class="menu-container">
+            <div class="three-dots" id="menuToggle">⋮</div>
+            <div class="dropdown-menu" id="dropdown">
+                <div id="openSettings">⚙️ Settings</div>
+                <div id="clearChatAction">🗑️ Clear Chat</div>
+            </div>
+        </div>
+    </div>
     
-    <div id="status">કનેક્ટિંગ...</div>
-    
-    <video id="remoteVideo" autoplay playsinline></video>
-    <video id="localVideo" autoplay playsinline muted style="display:none;"></video>
+    <div id="chat-box"></div>
 
-    <div class="controls">
-        <button onclick="startStream('user')">આગળનો કેમેરો</button>
-        <button onclick="startStream('environment')">પાછળનો કેમેરો</button>
+    <div class="emoji-menu" id="emojiMenu">
+        <span class="emoji-item">😊</span><span class="emoji-item">😂</span><span class="emoji-item">❤️</span><span class="emoji-item">👍</span><span class="emoji-item">🙏</span><span class="emoji-item">😘</span>
+        <span class="emoji-item">🔥</span><span class="emoji-item">😭</span><span class="emoji-item">😍</span><span class="emoji-item">✨</span><span class="emoji-item">😎</span><span class="emoji-item">🌹</span>
     </div>
 
-    <script>
-        const peer = new Peer(); // યુનિક આઈડી જનરેટ થશે
-        let localStream;
+    <div class="attach-menu" id="attachMenu">
+        <div class="attach-item" onclick="document.getElementById('camInput').click()">
+            <div class="attach-icon" style="background: #ec407a;">📷</div><span>Camera</span>
+        </div>
+        <div class="attach-item" onclick="document.getElementById('fileInput').click()">
+            <div class="attach-icon" style="background: #ab47bc;">🖼️</div><span>Gallery</span>
+        </div>
+    </div>
 
-        peer.on('open', (id) => {
-            document.getElementById('status').innerText = "તમારો ID: " + id;
-            console.log('My ID is: ' + id);
+    <div class="bottom-bar">
+        <div class="reply-preview" id="replyPreview">
+            <span id="replyToName">Name</span>
+            <div id="replyToText">Message...</div>
+            <div class="close-reply" onclick="cancelReply()">✕</div>
+        </div>
+
+        <div class="input-area-row">
+            <div class="input-wrapper">
+                <div class="icon-btn" id="emojiToggle">😊</div>
+                <input type="text" id="msgInput" placeholder="મેસેજ લખો..." autocomplete="off">
+                <div class="icon-btn" id="attachToggle" style="transform: rotate(45deg);">📎</div>
+            </div>
+            <button class="action-btn" id="actionBtn">🎙️</button>
+        </div>
+    </div>
+</div>
+
+<input type="file" id="fileInput" accept="image/*" style="display:none">
+<input type="file" id="camInput" accept="image/*" capture="camera" style="display:none">
+
+<div class="modal" id="settingsModal">
+    <div class="modal-content">
+        <div class="modal-header">Settings</div>
+        <img id="myCurrentPhoto" src="">
+        <div class="setting-group"><label>Sender Name (My Name):</label><input type="text" id="setSenderName"></div>
+        <div class="setting-group"><label>Receiver Name (Partner Name):</label><input type="text" id="setReceiverName"></div>
+        <div class="setting-group">
+            <label>My Profile Pic:</label>
+            <input type="file" id="profileFile" accept="image/*">
+            <div id="cropper-container">
+                <div id="crop-resizer"></div>
+                <button id="cropBtn" style="width:100%; background:#128c7e; color:white; padding:8px; border:none; border-radius:5px; margin-top:10px;">Confirm Photo</button>
+            </div>
+        </div>
+        <div class="setting-group"><label>My Webhook URL:</label><input type="text" id="setWebhook"></div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="document.getElementById('settingsModal').style.display='none'">Cancel</button>
+            <button class="btn-save" id="saveSettingsBtn">Save</button>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, push, onChildAdded, remove, onValue, update, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB4nqUWM_raMKoEXEmpX7KpFAwEm4B6nVU",
+        authDomain: "mychatapp-3bb67.firebaseapp.com",
+        databaseURL: "https://mychatapp-3bb67-default-rtdb.firebaseio.com",
+        projectId: "mychatapp-3bb67",
+        storageBucket: "mychatapp-3bb67.appspot.com",
+        messagingSenderId: "829898694526",
+        appId: "1:829898694526:web:c6265f21e301c93804dd2f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const messagesRef = ref(db, 'chats');
+
+    let config = JSON.parse(localStorage.getItem('chatConfig')) || { sender: "Anand", receiver: "Manisha", pic: "https://cdn-icons-png.flaticon.com/512/6997/6997662.png", webhook: "" };
+    let tempPicUrl = config.pic;
+    let croppieInstance = null;
+    let mediaRecorder;
+    let audioChunks = [];
+    let replyingTo = null;
+
+    window.cancelReply = () => {
+        replyingTo = null;
+        document.getElementById('replyPreview').style.display = 'none';
+    };
+
+    function init() {
+        document.getElementById('displayHeaderName').innerText = config.receiver + " ❤️";
+        document.getElementById('myCurrentPhoto').src = config.pic;
+        const myStatusRef = ref(db, `status/${config.sender}`);
+        const otherStatusRef = ref(db, `status/${config.receiver}`);
+        
+        onValue(ref(db, '.info/connected'), (snap) => {
+            if (snap.val()) {
+                update(myStatusRef, { state: 'online', photo: config.pic });
+                onDisconnect(myStatusRef).update({ state: 'offline', last_seen: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
+            }
         });
 
-        // કેમેરા સ્ટ્રીમ શરૂ કરવાનું ફંક્શન
-        async function startStream(cameraMode) {
-            const constraints = {
-                video: { facingMode: cameraMode },
-                audio: true
-            };
-
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia(constraints);
-                document.getElementById('localVideo').srcObject = localStream;
-                
-                // અહીં તમે બીજા ફોનનો ID નાખીને કૉલ કરી શકો છો
-                const remoteId = prompt("સામેના ફોનનો ID નાખો:");
-                const call = peer.call(remoteId, localStream);
-                
-                call.on('stream', (remoteStream) => {
-                    document.getElementById('remoteVideo').srcObject = remoteStream;
-                });
-            } catch (err) {
-                console.error("કેમેરા એક્સેસમાં ભૂલ: ", err);
+        onValue(otherStatusRef, (s) => {
+            if(s.exists()){
+                const d = s.val();
+                const statusEl = document.getElementById('onlineStatus');
+                if (d.state === 'online') {
+                    statusEl.innerText = 'Online';
+                    statusEl.classList.add('online-active');
+                } else {
+                    statusEl.innerText = `Last seen at ${d.last_seen || "recently"}`;
+                    statusEl.classList.remove('online-active');
+                }
+                if(d.photo) document.getElementById('displayPic').src = d.photo;
             }
+        });
+    }
+
+    // સુપર ફાસ્ટ ઇમેજ કોમ્પ્રેસર ફંક્શન
+    function compressAndSend(file) {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                // WhatsApp જેવું લોજિક: 600px પહોળાઈ રાખવાથી સ્પીડ 10 ગણી વધી જશે
+                const maxWidth = 600; 
+                const scale = maxWidth / img.width;
+                canvas.width = maxWidth;
+                canvas.height = img.height * scale;
+
+                const ctx = canvas.getContext('2d');
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                
+                // 0.5 (50%) ક્વોલિટી - 12MB ફાઈલ પણ ~70KB ની થઈ જશે
+                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.5);
+                sendMsg('image', compressedBase64);
+            };
+        };
+    }
+
+    const msgInput = document.getElementById('msgInput');
+    const actionBtn = document.getElementById('actionBtn');
+
+    msgInput.oninput = () => { actionBtn.innerHTML = msgInput.value.trim() ? "➤" : "🎙️"; };
+
+    actionBtn.onclick = () => {
+        if (msgInput.value.trim()) {
+            sendMsg('text', msgInput.value.trim());
+            msgInput.value = "";
+            actionBtn.innerHTML = "🎙️";
+            cancelReply();
+        } else {
+            handleVoice();
+        }
+    };
+
+    function sendMsg(type, content) {
+        const msgData = { 
+            sender: config.sender, 
+            type, 
+            content, 
+            time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) 
+        };
+        if (replyingTo) msgData.replyTo = replyingTo;
+        push(messagesRef, msgData);
+        if(config.webhook && type === 'text') fetch(`${config.webhook}?from=${config.sender}&msg=${encodeURIComponent(content)}`).catch(()=>{});
+    }
+
+    async function handleVoice() {
+        if (!mediaRecorder || mediaRecorder.state === "inactive") {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const reader = new FileReader();
+                    reader.onload = e => sendMsg('audio', e.target.result);
+                    reader.readAsDataURL(blob);
+                    audioChunks = [];
+                };
+                mediaRecorder.start();
+                actionBtn.style.background = "red";
+            } catch (e) { alert("Mic permission denied."); }
+        } else {
+            mediaRecorder.stop();
+            actionBtn.style.background = "#00897b";
+        }
+    }
+
+    [document.getElementById('fileInput'), document.getElementById('camInput')].forEach(el => {
+        el.onchange = e => {
+            const file = e.target.files[0];
+            if (file) compressAndSend(file); // અહીં કમ્પ્રેશનનો ઉપયોગ કર્યો છે
+            document.getElementById('attachMenu').style.display = 'none';
+        };
+    });
+
+    document.querySelectorAll('.emoji-item').forEach(e => {
+        e.onclick = (event) => {
+            event.stopPropagation();
+            msgInput.value += e.innerText;
+            msgInput.focus();
+            actionBtn.innerHTML = "➤";
+        };
+    });
+
+    document.getElementById('profileFile').onchange = e => {
+        const reader = new FileReader();
+        reader.onload = event => {
+            document.getElementById('cropper-container').style.display = 'block';
+            if (croppieInstance) croppieInstance.destroy();
+            croppieInstance = new Croppie(document.getElementById('crop-resizer'), { viewport: { width: 150, height: 150, type: 'circle' }, boundary: { width: 250, height: 250 } });
+            croppieInstance.bind({ url: event.target.result });
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    };
+
+    document.getElementById('cropBtn').onclick = async () => {
+        tempPicUrl = await croppieInstance.result({ type: 'base64', size: 'viewport', format: 'jpeg' });
+        document.getElementById('myCurrentPhoto').src = tempPicUrl;
+        document.getElementById('cropper-container').style.display = 'none';
+    };
+
+    document.getElementById('saveSettingsBtn').onclick = () => {
+        config = { sender: document.getElementById('setSenderName').value, receiver: document.getElementById('setReceiverName').value, webhook: document.getElementById('setWebhook').value, pic: tempPicUrl };
+        localStorage.setItem('chatConfig', JSON.stringify(config));
+        update(ref(db, `status/${config.sender}`), { photo: tempPicUrl }).then(() => location.reload());
+    };
+
+    document.getElementById('menuToggle').onclick = e => { e.stopPropagation(); dropdown.style.display = dropdown.style.display==='block'?'none':'block'; };
+    document.getElementById('emojiToggle').onclick = e => { e.stopPropagation(); emojiMenu.style.display = emojiMenu.style.display==='grid'?'none':'grid'; };
+    document.getElementById('attachToggle').onclick = e => { e.stopPropagation(); attachMenu.style.display = attachMenu.style.display==='grid'?'none':'grid'; };
+    document.getElementById('openSettings').onclick = () => {
+        document.getElementById('setSenderName').value = config.sender;
+        document.getElementById('setReceiverName').value = config.receiver;
+        document.getElementById('setWebhook').value = config.webhook;
+        document.getElementById('myCurrentPhoto').src = config.pic;
+        document.getElementById('settingsModal').style.display = 'flex';
+    };
+    document.getElementById('clearChatAction').onclick = () => { if(confirm("બધું સાફ કરવું છે?")) remove(messagesRef).then(()=>location.reload()); };
+    document.onclick = () => { dropdown.style.display='none'; emojiMenu.style.display='none'; attachMenu.style.display='none'; };
+
+    onChildAdded(messagesRef, s => {
+        const m = s.val();
+        const div = document.createElement('div');
+        div.className = `message ${m.sender === config.sender ? 'sent' : 'received'}`;
+        
+        let replyHtml = '';
+        if (m.replyTo) {
+            const displayName = m.replyTo.sender === config.sender ? "You" : m.replyTo.sender;
+            replyHtml = `<div class="reply-container"><strong>${displayName}</strong><br>${m.replyTo.content.substring(0, 50)}</div>`;
         }
 
-        // ઇનકમિંગ કૉલ રિસીવ કરવા માટે
-        peer.on('call', (call) => {
-            call.answer(localStream); 
-            call.on('stream', (remoteStream) => {
-                document.getElementById('remoteVideo').srcObject = remoteStream;
-            });
-        });
-    </script>
+        // ઇમેજમાં loading="lazy" અને decoding="async" ઉમેર્યું જેથી રિસીવ સ્પીડ વધે
+        if (m.type === 'image') div.innerHTML = `${replyHtml}<img src="${m.content}" class="chat-img" loading="lazy" decoding="async">`;
+        else if (m.type === 'audio') div.innerHTML = `${replyHtml}<audio controls src="${m.content}" style="width:200px;"></audio>`;
+        else div.innerHTML = `${replyHtml}<div>${m.content}</div>`;
+        
+        div.innerHTML += `<span class="msg-time">${m.time}</span>`;
+
+        div.onclick = () => {
+            replyingTo = { sender: m.sender, content: m.type === 'text' ? m.content : `[${m.type}]` };
+            document.getElementById('replyToName').innerText = m.sender === config.sender ? "You" : m.sender;
+            document.getElementById('replyToText').innerText = replyingTo.content;
+            document.getElementById('replyPreview').style.display = 'block';
+            msgInput.focus();
+        };
+
+        document.getElementById('chat-box').appendChild(div);
+        document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
+    });
+
+    init();
+</script>
 </body>
 </html>
