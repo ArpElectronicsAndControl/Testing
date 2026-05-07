@@ -13,6 +13,7 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #e5ddd5; display: flex; justify-content: center; height: 100dvh; overflow: hidden; }
         .chat-container { width: 100%; max-width: 500px; background: #efe7de; display: flex; flex-direction: column; height: 100%; position: relative; }
         
+        /* Header */
         .header { background: #075e54; color: white; padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; z-index: 10; height: 65px; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .user-profile { display: flex; align-items: center; gap: 10px; }
         #displayPic { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 1.5px solid white; background: #eee; }
@@ -25,17 +26,15 @@
         .dropdown-menu { position: absolute; right: 10px; top: 55px; background: white; color: black; box-shadow: 0 2px 10px rgba(0,0,0,0.2); border-radius: 5px; display: none; width: 170px; z-index: 100; }
         .dropdown-menu div { padding: 12px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 14px; }
 
+        /* Chat Box */
         #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); scroll-behavior: smooth; }
-        
         .message { margin-bottom: 10px; padding: 8px 12px; border-radius: 8px; max-width: 85%; word-wrap: break-word; font-size: 15px; box-shadow: 0 1px 1px rgba(0,0,0,0.1); position: relative; }
         .sent { align-self: flex-end; background: #dcf8c6; border-bottom-right-radius: 2px; }
         .received { align-self: flex-start; background: white; border-bottom-left-radius: 2px; }
-        
         .msg-info { display: flex; align-items: center; justify-content: flex-end; gap: 4px; margin-top: 4px; }
         .msg-time { font-size: 10px; color: #667781; }
-        .tick { font-size: 14px; color: #667781; }
-        .tick-read { color: #34B7F1; }
 
+        /* Bottom Bar */
         .bottom-bar { background: transparent; padding: 5px 8px 10px 8px; display: flex; flex-direction: column; }
         .input-area-row { display: flex; align-items: flex-end; gap: 5px; width: 100%; }
         .input-wrapper { display: flex; align-items: center; background: white; border-radius: 25px; flex: 1; padding: 2px 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
@@ -43,6 +42,7 @@
         input[type="text"] { flex: 1; border: none; outline: none; padding: 10px 5px; font-size: 16px; background: transparent; }
         .action-btn { background: #00897b; color: white; width: 48px; height: 48px; border-radius: 50%; display: flex; justify-content: center; align-items: center; border: none; font-size: 20px; cursor: pointer; }
 
+        /* Modals */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
         .modal-header { color: #075e54; border-bottom: 2px solid #075e54; margin-bottom: 20px; padding-bottom: 5px; font-weight: bold; }
@@ -55,10 +55,11 @@
         .btn-cancel { background: #eee; color: #333; }
         .btn-save { background: #075e54; color: white; }
 
-        #callUI { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #075e54; z-index: 2000; flex-direction: column; align-items: center; justify-content: center; color: white; }
+        /* Call UI Overlay */
+        #callUI { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; flex-direction: column; align-items: center; justify-content: center; color: white; }
         #remoteVideo { width: 100%; height: 100%; object-fit: cover; }
-        #localVideo { position: absolute; top: 20px; right: 20px; width: 120px; height: 160px; border-radius: 10px; border: 2px solid white; object-fit: cover; }
-        .call-controls { position: absolute; bottom: 50px; display: flex; gap: 30px; }
+        #localVideo { position: absolute; top: 20px; right: 20px; width: 100px; height: 140px; border-radius: 8px; border: 2px solid white; object-fit: cover; z-index: 2001; }
+        .call-controls { position: absolute; bottom: 50px; display: flex; gap: 30px; z-index: 2002; }
         .end-call { background: #ff3b30; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; cursor: pointer; }
         .incoming-call { background: white; color: #333; padding: 20px; border-radius: 15px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
     </style>
@@ -118,17 +119,17 @@
     <div class="modal-content">
         <div class="modal-header">Settings</div>
         <img id="myCurrentPhoto" src="">
-        <div class="setting-group"><label>Sender Name (My Name):</label><input type="text" id="setSenderName"></div>
-        <div class="setting-group"><label>Receiver Name (Partner Name):</label><input type="text" id="setReceiverName"></div>
+        <div class="setting-group"><label>My Name:</label><input type="text" id="setSenderName"></div>
+        <div class="setting-group"><label>Partner Name:</label><input type="text" id="setReceiverName"></div>
         <div class="setting-group">
-            <label>My Profile Pic:</label>
+            <label>Profile Pic:</label>
             <input type="file" id="profileFile" accept="image/*">
-            <div id="cropper-container" style="display:none; margin-top: 15px; padding: 10px; border: 1px dashed #075e54;">
+            <div id="cropper-container" style="display:none; margin-top: 10px;">
                 <div id="crop-resizer"></div>
-                <button id="cropBtn" style="width:100%; background:#128c7e; color:white; padding:8px; border:none; border-radius:5px; margin-top:10px;">Confirm Photo</button>
+                <button id="cropBtn" style="width:100%; background:#128c7e; color:white; padding:8px; border:none; margin-top:5px;">Confirm Photo</button>
             </div>
         </div>
-        <div class="setting-group"><label>My Webhook URL:</label><input type="text" id="setWebhook"></div>
+        <div class="setting-group"><label>Webhook URL:</label><input type="text" id="setWebhook"></div>
         <div class="modal-footer">
             <button class="btn-cancel" onclick="document.getElementById('settingsModal').style.display='none'">Cancel</button>
             <button class="btn-save" id="saveSettingsBtn">Save</button>
@@ -136,21 +137,25 @@
     </div>
 </div>
 
+<!-- Incoming Call Modal -->
 <div class="modal" id="incomingCallModal">
     <div class="incoming-call">
         <h3 id="callerName">Call Incoming...</h3>
         <p id="callTypeLabel">Video Call</p>
         <div style="display: flex; gap: 20px; justify-content: center; margin-top: 20px;">
-            <button id="acceptCall" style="background: #25D366; color: white; border: none; padding: 10px 25px; border-radius: 20px;">Answer</button>
-            <button id="declineCall" style="background: #FF3B30; color: white; border: none; padding: 10px 25px; border-radius: 20px;">Decline</button>
+            <button id="acceptCall" style="background: #25D366; color: white; border: none; padding: 10px 25px; border-radius: 20px; cursor: pointer;">Answer</button>
+            <button id="declineCall" style="background: #FF3B30; color: white; border: none; padding: 10px 25px; border-radius: 20px; cursor: pointer;">Decline</button>
         </div>
     </div>
 </div>
 
+<!-- Full Call UI -->
 <div id="callUI">
     <video id="remoteVideo" autoplay playsinline></video>
     <video id="localVideo" autoplay playsinline muted></video>
-    <div class="call-controls"><div class="end-call" id="endCallBtn">📞</div></div>
+    <div class="call-controls">
+        <div class="end-call" id="endCallBtn">📞</div>
+    </div>
 </div>
 
 <script type="module">
@@ -173,40 +178,37 @@
     let tempPicUrl = config.pic;
     let croppieInstance = null;
 
-    function getTimeFormatted() { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }); }
+    // WebRTC Variables
+    let localStream;
+    let peerConnection;
+    const servers = { iceServers: [{ urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] }] };
 
-    // --- INITIALIZE UI WITH CONFIG ---
-    function initUI() {
+    function getTime() { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }); }
+
+    // UI Init
+    function init() {
         document.getElementById('displayHeaderName').innerText = config.receiver + " ❤️";
-        document.getElementById('displayPic').src = config.pic; // Placeholder till status loads
+        document.getElementById('displayPic').src = config.pic;
         
         const myStatusRef = ref(db, `status/${config.sender}`);
-        const otherStatusRef = ref(db, `status/${config.receiver}`);
-
         onValue(ref(db, '.info/connected'), (snap) => {
             if (snap.val()) {
                 update(myStatusRef, { state: 'online', photo: config.pic });
-                onDisconnect(myStatusRef).update({ state: 'offline', last_seen: getTimeFormatted() });
+                onDisconnect(myStatusRef).update({ state: 'offline', last_seen: getTime() });
             }
         });
 
-        onValue(otherStatusRef, (s) => {
+        onValue(ref(db, `status/${config.receiver}`), (s) => {
             const d = s.val() || {};
-            const statusEl = document.getElementById('onlineStatus');
-            if (d.state === 'online') {
-                statusEl.innerText = 'Online';
-                statusEl.classList.add('online-active');
-            } else {
-                statusEl.innerText = `Last seen at ${d.last_seen || "recently"}`;
-                statusEl.classList.remove('online-active');
-            }
+            const el = document.getElementById('onlineStatus');
+            if (d.state === 'online') { el.innerText = 'Online'; el.classList.add('online-active'); }
+            else { el.innerText = `Last seen ${d.last_seen || ""}`; el.classList.remove('online-active'); }
             if(d.photo) document.getElementById('displayPic').src = d.photo;
         });
     }
 
-    // --- CHAT LOGIC ---
-    const messagesRef = ref(db, 'chats');
-    onChildAdded(messagesRef, s => {
+    // Chat
+    onChildAdded(ref(db, 'chats'), s => {
         const m = s.val();
         const div = document.createElement('div');
         div.className = `message ${m.sender === config.sender ? 'sent' : 'received'}`;
@@ -215,57 +217,102 @@
         document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
     });
 
-    const msgInput = document.getElementById('msgInput');
-    const actionBtn = document.getElementById('actionBtn');
-    
-    actionBtn.onclick = () => {
-        const val = msgInput.value.trim();
+    document.getElementById('actionBtn').onclick = () => {
+        const val = document.getElementById('msgInput').value.trim();
         if (val) {
-            const msgData = { sender: config.sender, content: val, time: getTimeFormatted() };
-            push(messagesRef, msgData);
-            if(config.webhook) {
-                fetch(`${config.webhook}?from=${encodeURIComponent(config.sender)}&msg=${encodeURIComponent(val)}`).catch(()=>{});
-            }
-            msgInput.value = "";
+            push(ref(db, 'chats'), { sender: config.sender, content: val, time: getTime() });
+            if(config.webhook) fetch(`${config.webhook}?from=${config.sender}&msg=${val}`).catch(()=>{});
+            document.getElementById('msgInput').value = "";
         }
     };
 
-    // --- CALLING LOGIC ---
-    let localStream;
-    const callRef = ref(db, 'calls');
-    async function startCall(type) {
-        try {
-            const constraints = { audio: true, video: type === 'video' };
-            localStream = await navigator.mediaDevices.getUserMedia(constraints);
-            document.getElementById('localVideo').srcObject = localStream;
-            document.getElementById('callUI').style.display = 'flex';
-            set(callRef, { caller: config.sender, type: type, status: 'ringing' });
-        } catch(e) { alert("Access Denied"); }
+    // --- WebRTC CALLING LOGIC (FIXED) ---
+    async function setupPeer(type) {
+        peerConnection = new RTCPeerConnection(servers);
+        localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+        peerConnection.ontrack = (event) => {
+            document.getElementById('remoteVideo').srcObject = event.streams[0];
+        };
+
+        peerConnection.onicecandidate = (event) => {
+            if (event.candidate) {
+                push(ref(db, 'calls/candidates'), event.candidate.toJSON());
+            }
+        };
     }
 
-    onValue(callRef, (snapshot) => {
+    async function startCall(type) {
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: type === 'video' });
+            document.getElementById('localVideo').srcObject = localStream;
+            document.getElementById('callUI').style.display = 'flex';
+            document.getElementById('localVideo').style.display = type === 'video' ? 'block' : 'none';
+
+            await setupPeer(type);
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+
+            set(ref(db, 'calls'), {
+                offer: { type: offer.type, sdp: offer.sdp },
+                caller: config.sender,
+                callType: type,
+                status: 'ringing'
+            });
+        } catch (e) { alert("Camera/Mic permission needed."); }
+    }
+
+    onValue(ref(db, 'calls'), async (snapshot) => {
         const data = snapshot.val();
-        if (data && data.status === 'ringing' && data.caller !== config.sender) {
+        if (!data) return;
+
+        // Receiver side
+        if (data.status === 'ringing' && data.caller !== config.sender) {
             document.getElementById('incomingCallModal').style.display = 'flex';
             document.getElementById('callerName').innerText = data.caller;
+            document.getElementById('callTypeLabel').innerText = data.callType === 'video' ? "Video Call" : "Audio Call";
+
             document.getElementById('acceptCall').onclick = async () => {
                 document.getElementById('incomingCallModal').style.display = 'none';
-                const constraints = { audio: true, video: data.type === 'video' };
-                localStream = await navigator.mediaDevices.getUserMedia(constraints);
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: data.callType === 'video' });
                 document.getElementById('localVideo').srcObject = localStream;
+                document.getElementById('localVideo').style.display = data.callType === 'video' ? 'block' : 'none';
                 document.getElementById('callUI').style.display = 'flex';
-                update(callRef, { status: 'accepted' });
+
+                await setupPeer(data.callType);
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                
+                update(ref(db, 'calls'), { answer: { type: answer.type, sdp: answer.sdp }, status: 'accepted' });
             };
-            document.getElementById('declineCall').onclick = () => { remove(callRef); document.getElementById('incomingCallModal').style.display = 'none'; };
+
+            document.getElementById('declineCall').onclick = () => { remove(ref(db, 'calls')); document.getElementById('incomingCallModal').style.display = 'none'; };
+        }
+
+        // Caller side: when answer received
+        if (data.status === 'accepted' && data.answer && data.caller === config.sender) {
+            if (!peerConnection.currentRemoteDescription) {
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+            }
         }
     });
 
-    document.getElementById('endCallBtn').onclick = () => { location.reload(); remove(callRef); };
+    onChildAdded(ref(db, 'calls/candidates'), (snapshot) => {
+        if (peerConnection) {
+            peerConnection.addIceCandidate(new RTCIceCandidate(snapshot.val()));
+        }
+    });
 
-    // --- SETTINGS LOGIC ---
+    document.getElementById('endCallBtn').onclick = () => {
+        if (localStream) localStream.getTracks().forEach(t => t.stop());
+        remove(ref(db, 'calls'));
+        location.reload();
+    };
+
+    // Settings
     document.getElementById('menuToggle').onclick = (e) => { e.stopPropagation(); dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block'; };
     document.getElementById('openSettings').onclick = () => { dropdown.style.display='none'; document.getElementById('passwordModal').style.display='flex'; };
-    
     document.getElementById('checkPasswordBtn').onclick = () => {
         if (document.getElementById('adminPassword').value === "252336") {
             document.getElementById('passwordModal').style.display = 'none';
@@ -274,7 +321,7 @@
             document.getElementById('setWebhook').value = config.webhook;
             document.getElementById('myCurrentPhoto').src = config.pic;
             document.getElementById('settingsModal').style.display = 'flex';
-        } else { alert("Wrong Password!"); }
+        } else alert("Wrong Password!");
     };
 
     document.getElementById('profileFile').onchange = e => {
@@ -295,22 +342,17 @@
     };
 
     document.getElementById('saveSettingsBtn').onclick = () => {
-        const newConfig = { 
-            sender: document.getElementById('setSenderName').value || config.sender, 
-            receiver: document.getElementById('setReceiverName').value || config.receiver, 
-            webhook: document.getElementById('setWebhook').value || config.webhook, 
-            pic: tempPicUrl 
-        };
-        localStorage.setItem('chatConfig', JSON.stringify(newConfig));
+        const cfg = { sender: document.getElementById('setSenderName').value, receiver: document.getElementById('setReceiverName').value, webhook: document.getElementById('setWebhook').value, pic: tempPicUrl };
+        localStorage.setItem('chatConfig', JSON.stringify(cfg));
         location.reload();
     };
 
     document.getElementById('startAudioCall').onclick = () => startCall('audio');
     document.getElementById('startVideoCall').onclick = () => startCall('video');
-    document.getElementById('clearChatAction').onclick = () => { if(confirm("Clear all?")) remove(messagesRef).then(()=>location.reload()); };
-    document.onclick = () => { dropdown.style.display = 'none'; };
+    document.getElementById('clearChatAction').onclick = () => { if(confirm("Clear chat?")) remove(ref(db, 'chats')).then(()=>location.reload()); };
+    document.onclick = () => dropdown.style.display = 'none';
 
-    initUI();
+    init();
 </script>
 </body>
 </html>
