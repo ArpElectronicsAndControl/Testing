@@ -7,7 +7,6 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js"></script>
-    <!-- SimplePeer for WebRTC -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-peer/9.11.1/simplepeer.min.js"></script>
 
     <style>
@@ -59,32 +58,31 @@
         input[type="text"] { flex: 1; border: none; outline: none; padding: 10px 5px; font-size: 16px; background: transparent; }
         .action-btn { background: #00897b; color: white; width: 48px; height: 48px; border-radius: 50%; display: flex; justify-content: center; align-items: center; border: none; font-size: 20px; cursor: pointer; flex-shrink: 0; }
 
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
-        .modal-header { color: #075e54; border-bottom: 2px solid #075e54; margin-bottom: 20px; padding-bottom: 5px; font-size: 1.2rem; font-weight: bold; }
-        #myCurrentPhoto { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #075e54; display: block; margin: 0 auto 20px auto; background: #eee; }
-        .setting-group { margin-bottom: 15px; }
-        .setting-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #333; font-size: 14px; }
-        .setting-group input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; background: #f9f9f9; }
-        .modal-footer { margin-top: 25px; display: flex; justify-content: flex-end; gap: 10px; }
-        .modal-footer button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .btn-cancel { background: #eee; color: #333; }
-        .btn-save { background: #075e54; color: white; }
+        /* --- Updated Call UI Styles --- */
+        #callOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #075e54; z-index: 2000; flex-direction: column; align-items: center; justify-content: center; color: white; transition: background 0.3s; }
+        #remoteVideo { width: 100%; height: 100%; object-fit: cover; background: #222; }
+        #localVideo { width: 110px; height: 160px; position: absolute; top: 30px; right: 20px; border: 2px solid rgba(255,255,255,0.5); border-radius: 12px; object-fit: cover; background: #000; z-index: 2002; }
         
-        .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
-        .info-label { color: #667781; font-size: 14px; }
-        .info-time { font-weight: 500; color: #333; font-size: 14px; }
+        .call-info-box { position: absolute; top: 15%; text-align: center; z-index: 2001; }
+        .call-user-name { font-size: 28px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .call-status { font-size: 16px; margin-top: 10px; opacity: 0.9; }
 
-        /* --- Call UI Styles --- */
-        #callOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #075e54; z-index: 2000; flex-direction: column; align-items: center; justify-content: center; color: white; }
-        #remoteVideo { width: 100%; height: 100%; object-fit: cover; }
-        #localVideo { width: 100px; height: 150px; position: absolute; top: 20px; right: 20px; border: 2px solid white; border-radius: 10px; object-fit: cover; background: #333; }
-        .call-controls { position: absolute; bottom: 50px; display: flex; gap: 30px; z-index: 2001; }
-        .call-btn { width: 65px; height: 65px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .call-controls { position: absolute; bottom: 8%; display: flex; gap: 40px; z-index: 2001; align-items: center; }
+        .call-btn { width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); transition: transform 0.2s; }
+        .call-btn:active { transform: scale(0.9); }
+        
         .btn-end { background: #ff3b30; color: white; }
-        .btn-accept { background: #28cd41; color: white; }
-        .call-info-box { text-align: center; margin-bottom: 30px; }
-        .call-user-name { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+        .btn-accept { background: #28cd41; color: white; animation: pulse 1.5s infinite; }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(40, 205, 65, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(40, 205, 65, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(40, 205, 65, 0); }
+        }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; }
+        .btn-save { background: #075e54; color: white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; }
     </style>
 </head>
 <body>
@@ -111,27 +109,12 @@
     
     <div id="chat-box"></div>
 
-    <div class="emoji-menu" id="emojiMenu">
-        <span class="emoji-item">😊</span><span class="emoji-item">😂</span><span class="emoji-item">❤️</span><span class="emoji-item">👍</span><span class="emoji-item">🙏</span><span class="emoji-item">😘</span>
-        <span class="emoji-item">🔥</span><span class="emoji-item">😭</span><span class="emoji-item">😍</span><span class="emoji-item">✨</span><span class="emoji-item">😎</span><span class="emoji-item">🌹</span>
-    </div>
-
-    <div class="attach-menu" id="attachMenu">
-        <div class="attach-item" onclick="document.getElementById('camInput').click()">
-            <div class="attach-icon" style="background: #ec407a;">📷</div><span>Camera</span>
-        </div>
-        <div class="attach-item" onclick="document.getElementById('fileInput').click()">
-            <div class="attach-icon" style="background: #ab47bc;">🖼️</div><span>Gallery</span>
-        </div>
-    </div>
-
     <div class="bottom-bar">
         <div class="reply-preview" id="replyPreview">
             <span id="replyToName">Name</span>
             <div id="replyToText">Message...</div>
             <div class="close-reply" onclick="cancelReply()">✕</div>
         </div>
-
         <div class="input-area-row">
             <div class="input-wrapper">
                 <div class="icon-btn" id="emojiToggle">😊</div>
@@ -143,12 +126,12 @@
     </div>
 </div>
 
-<!-- --- Call UI Overlay --- -->
 <div id="callOverlay">
-    <div class="call-info-box" id="incomingCallInfo">
+    <div class="call-info-box">
         <div class="call-user-name" id="callUserName">Manisha ❤️</div>
-        <div id="callStatusText">Calling...</div>
+        <div class="call-status" id="callStatusText">Calling...</div>
     </div>
+    
     <video id="remoteVideo" autoplay playsinline></video>
     <video id="localVideo" autoplay muted playsinline></video>
     
@@ -158,43 +141,14 @@
     </div>
 </div>
 
-<input type="file" id="fileInput" accept="image/*" style="display:none">
-<input type="file" id="camInput" accept="image/*" capture="camera" style="display:none">
-
-<div class="modal" id="infoModal">
-    <div class="modal-content">
-        <div class="modal-header">Message Info</div>
-        <div class="info-row">
-            <span class="info-label">✓ Sent:</span>
-            <span class="info-time" id="infoSentTime">-</span>
-        </div>
-        <div class="info-row">
-            <span class="info-label">✓✓ Read:</span>
-            <span class="info-time" id="infoReadTime">Not read yet</span>
-        </div>
-        <div class="modal-footer">
-            <button class="btn-save" onclick="document.getElementById('infoModal').style.display='none'">OK</button>
-        </div>
-    </div>
-</div>
-
 <div class="modal" id="settingsModal">
     <div class="modal-content">
         <div class="modal-header">Settings</div>
-        <img id="myCurrentPhoto" src="">
-        <div class="setting-group"><label>Sender Name (My Name):</label><input type="text" id="setSenderName"></div>
-        <div class="setting-group"><label>Receiver Name (Partner Name):</label><input type="text" id="setReceiverName"></div>
-        <div class="setting-group">
-            <label>My Profile Pic:</label>
-            <input type="file" id="profileFile" accept="image/*">
-            <div id="cropper-container" style="display:none; margin-top: 15px; padding: 10px; border: 1px dashed #075e54;">
-                <div id="crop-resizer"></div>
-                <button id="cropBtn" style="width:100%; background:#128c7e; color:white; padding:8px; border:none; border-radius:5px; margin-top:10px;">Confirm Photo</button>
-            </div>
-        </div>
-        <div class="setting-group"><label>My Webhook URL:</label><input type="text" id="setWebhook"></div>
-        <div class="modal-footer">
-            <button class="btn-cancel" onclick="document.getElementById('settingsModal').style.display='none'">Cancel</button>
+        <img id="myCurrentPhoto" src="" style="width:100px; border-radius:50%; display:block; margin: 10px auto;">
+        <input type="text" id="setSenderName" placeholder="My Name" style="width:100%; margin:10px 0; padding:8px;">
+        <input type="text" id="setReceiverName" placeholder="Partner Name" style="width:100%; margin:10px 0; padding:8px;">
+        <input type="text" id="setWebhook" placeholder="Webhook URL" style="width:100%; margin:10px 0; padding:8px;">
+        <div class="modal-footer" style="text-align:right;">
             <button class="btn-save" id="saveSettingsBtn">Save</button>
         </div>
     </div>
@@ -202,7 +156,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, push, onChildAdded, remove, onValue, update, onDisconnect, onChildChanged, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, push, onChildAdded, remove, onValue, update, onDisconnect, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyB4nqUWM_raMKoEXEmpX7KpFAwEm4B6nVU",
@@ -216,80 +170,53 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const messagesRef = ref(db, 'chats');
-
+    
     let config = JSON.parse(localStorage.getItem('chatConfig')) || { sender: "Anand", receiver: "Manisha", pic: "https://cdn-icons-png.flaticon.com/512/6997/6997662.png", webhook: "" };
-    let tempPicUrl = config.pic;
-    let croppieInstance = null;
-    let mediaRecorder;
-    let audioChunks = [];
-    let replyingTo = null;
-    let localMessages = {};
-
-    // Call Variables
+    
     let localStream;
     let peer;
     const callRef = ref(db, 'calls');
+    let currentCallData = null;
 
-    function getTimeFormatted() {
-        return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-    }
+    function getTimeFormatted() { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }); }
 
-    window.cancelReply = () => {
-        replyingTo = null;
-        document.getElementById('replyPreview').style.display = 'none';
-    };
-
+    // --- Core Logic ---
     function init() {
         document.getElementById('displayHeaderName').innerText = config.receiver + " ❤️";
-        document.getElementById('myCurrentPhoto').src = config.pic;
-        const myStatusRef = ref(db, `status/${config.sender}`);
-        const otherStatusRef = ref(db, `status/${config.receiver}`);
         
+        // Status Management
+        const myStatusRef = ref(db, `status/${config.sender}`);
         onValue(ref(db, '.info/connected'), (snap) => {
             if (snap.val()) {
-                update(myStatusRef, { state: 'online', photo: config.pic });
+                update(myStatusRef, { state: 'online', last_seen: getTimeFormatted() });
                 onDisconnect(myStatusRef).update({ state: 'offline', last_seen: getTimeFormatted() });
             }
         });
 
-        onValue(otherStatusRef, (s) => {
-            if(s.exists()){
-                const d = s.val();
-                const statusEl = document.getElementById('onlineStatus');
-                if (d.state === 'online') {
-                    statusEl.innerText = 'Online';
-                    statusEl.classList.add('online-active');
-                } else {
-                    statusEl.innerText = `Last seen at ${d.last_seen || "recently"}`;
-                    statusEl.classList.remove('online-active');
-                }
-                if(d.photo) document.getElementById('displayPic').src = d.photo;
-            }
-        });
-
-        // Listen for Incoming Calls
+        // Instant Call Listener
         onValue(callRef, (snapshot) => {
             const data = snapshot.val();
-            if (data && data.to === config.sender && data.status === 'dialing') {
+            if (!data) return;
+
+            if (data.to === config.sender && data.status === 'dialing' && (!currentCallData)) {
+                currentCallData = data;
                 showIncomingCall(data);
-            } else if (data && data.status === 'ended') {
+            } else if (data.status === 'ended') {
                 endCallUI();
             }
         });
     }
 
-    // --- Calling Logic ---
     async function startCall(isVideo) {
         try {
             localStream = await navigator.mediaDevices.getUserMedia({ video: isVideo, audio: true });
             document.getElementById('localVideo').srcObject = localStream;
+            document.getElementById('localVideo').style.display = isVideo ? 'block' : 'none';
             document.getElementById('callOverlay').style.display = 'flex';
-            document.getElementById('callUserName').innerText = config.receiver;
-            document.getElementById('callStatusText').innerText = "Calling...";
+            document.getElementById('callStatusText').innerText = "Ringing...";
             document.getElementById('acceptBtn').style.display = 'none';
 
-            peer = new SimplePeer({ initiator: true, trickle: false, stream: localStream });
+            peer = new SimplePeer({ initiator: true, trickle: true, stream: localStream });
 
             peer.on('signal', data => {
                 set(callRef, {
@@ -302,59 +229,64 @@
             });
 
             peer.on('stream', stream => {
-                document.getElementById('remoteVideo').srcObject = stream;
+                const remoteVideo = document.getElementById('remoteVideo');
+                remoteVideo.srcObject = stream;
                 document.getElementById('callStatusText').innerText = "Connected";
             });
 
-            // Handle when someone accepts
             onValue(callRef, (snap) => {
                 const val = snap.val();
-                if (val && val.status === 'accepted' && val.to === config.receiver) {
+                if (val && val.status === 'accepted' && val.answerSignal) {
                     peer.signal(JSON.parse(val.answerSignal));
                 }
             });
 
-        } catch (err) {
-            alert("Error accessing camera/mic: " + err.message);
-        }
+        } catch (err) { alert("Permissions error: " + err.message); }
     }
 
     function showIncomingCall(data) {
         document.getElementById('callOverlay').style.display = 'flex';
-        document.getElementById('callUserName').innerText = data.from;
         document.getElementById('callStatusText').innerText = `Incoming ${data.type} call...`;
         document.getElementById('acceptBtn').style.display = 'block';
         document.getElementById('remoteVideo').style.display = 'none';
+        document.getElementById('localVideo').style.display = 'none';
 
         document.getElementById('acceptBtn').onclick = async () => {
-            localStream = await navigator.mediaDevices.getUserMedia({ video: data.type === 'video', audio: true });
-            document.getElementById('localVideo').srcObject = localStream;
-            document.getElementById('remoteVideo').style.display = 'block';
-            document.getElementById('acceptBtn').style.display = 'none';
-
-            peer = new SimplePeer({ initiator: false, trickle: false, stream: localStream });
-
-            peer.on('signal', signalData => {
-                update(callRef, {
-                    status: 'accepted',
-                    answerSignal: JSON.stringify(signalData)
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: data.type === 'video', 
+                    audio: true 
                 });
-            });
+                document.getElementById('localVideo').srcObject = localStream;
+                document.getElementById('localVideo').style.display = data.type === 'video' ? 'block' : 'none';
+                document.getElementById('remoteVideo').style.display = 'block';
+                document.getElementById('acceptBtn').style.display = 'none';
 
-            peer.on('stream', stream => {
-                document.getElementById('remoteVideo').srcObject = stream;
-                document.getElementById('callStatusText').innerText = "Connected";
-            });
+                peer = new SimplePeer({ initiator: false, trickle: true, stream: localStream });
 
-            peer.signal(JSON.parse(data.signal));
+                peer.on('signal', signal => {
+                    update(callRef, {
+                        status: 'accepted',
+                        answerSignal: JSON.stringify(signal)
+                    });
+                });
+
+                peer.on('stream', stream => {
+                    document.getElementById('remoteVideo').srcObject = stream;
+                    document.getElementById('callStatusText').innerText = "Connected";
+                });
+
+                peer.signal(JSON.parse(data.signal));
+            } catch (err) { alert(err.message); }
         };
     }
 
     function endCallUI() {
-        if (localStream) {
-            localStream.getTracks().forEach(track => track.stop());
-        }
+        if (localStream) localStream.getTracks().forEach(t => t.stop());
         if (peer) peer.destroy();
+        peer = null;
+        localStream = null;
+        currentCallData = null;
         document.getElementById('callOverlay').style.display = 'none';
         document.getElementById('remoteVideo').srcObject = null;
         document.getElementById('localVideo').srcObject = null;
@@ -368,210 +300,39 @@
     document.getElementById('startAudioCall').onclick = () => startCall(false);
     document.getElementById('startVideoCall').onclick = () => startCall(true);
 
-    // --- Message Logic (No Changes) ---
-    function sendMsg(type, content) {
-        const msgData = { 
-            sender: config.sender, 
-            type, 
-            content, 
-            time: getTimeFormatted(),
-            status: 'sent',
-            sentTime: getTimeFormatted(),
-            readTime: ""
-        };
-        if (replyingTo) msgData.replyTo = replyingTo;
-        push(messagesRef, msgData);
-        if(config.webhook && type === 'text') fetch(`${config.webhook}?from=${config.sender}&msg=${encodeURIComponent(content)}`).catch(()=>{});
-    }
-
-    function getTickHtml(sender, status) {
-        if (sender !== config.sender) return ''; 
-        if (status === 'read') return '<span class="tick tick-read">✓✓</span>';
-        return '<span class="tick tick-sent">✓</span>';
-    }
-
-    function showMessageInfo(msgId) {
-        const msgData = localMessages[msgId];
-        if (!msgData || msgData.sender !== config.sender) return;
-        document.getElementById('infoSentTime').innerText = msgData.sentTime || msgData.time;
-        document.getElementById('infoReadTime').innerText = msgData.readTime || "Not read yet";
-        document.getElementById('infoModal').style.display = 'flex';
-    }
-
+    // --- Chat Logic ---
+    const messagesRef = ref(db, 'chats');
     onChildAdded(messagesRef, s => {
         const m = s.val();
-        const msgId = s.key;
-        localMessages[msgId] = m;
-        
-        if (m.sender !== config.sender && m.status === 'sent') {
-            update(ref(db, `chats/${msgId}`), { status: 'read', readTime: getTimeFormatted() });
-        }
-
         const div = document.createElement('div');
         div.className = `message ${m.sender === config.sender ? 'sent' : 'received'}`;
-        div.id = `msg-${msgId}`;
-        
-        let replyHtml = '';
-        if (m.replyTo) {
-            const displayName = m.replyTo.sender === config.sender ? "You" : m.replyTo.sender;
-            replyHtml = `<div class="reply-container"><strong>${displayName}</strong><br>${m.replyTo.content.substring(0, 50)}</div>`;
-        }
-
-        let contentHtml = '';
-        if (m.type === 'image') contentHtml = `<img src="${m.content}" class="chat-img" loading="lazy">`;
-        else if (m.type === 'audio') contentHtml = `<audio controls src="${m.content}" style="width:200px;"></audio>`;
-        else contentHtml = `<div>${m.content}</div>`;
-        
-        div.innerHTML = `${replyHtml}${contentHtml}
-            <div class="msg-info">
-                <span class="msg-time">${m.time}</span>
-                <span class="status-icon">${getTickHtml(m.sender, m.status)}</span>
-            </div>`;
-
-        let pressTimer;
-        div.addEventListener('touchstart', () => {
-            pressTimer = window.setTimeout(() => {
-                div.dataset.longpressed = "true";
-                showMessageInfo(msgId);
-            }, 600);
-        });
-        div.addEventListener('touchend', () => {
-            clearTimeout(pressTimer);
-            setTimeout(() => { div.dataset.longpressed = "false"; }, 100);
-        });
-
-        div.onclick = () => {
-            if (div.dataset.longpressed === "true") return;
-            replyingTo = { sender: m.sender, content: m.type === 'text' ? m.content : `[${m.type}]` };
-            document.getElementById('replyToName').innerText = m.sender === config.sender ? "You" : m.sender;
-            document.getElementById('replyToText').innerText = replyingTo.content;
-            document.getElementById('replyPreview').style.display = 'block';
-            msgInput.focus();
-        };
-
+        div.innerHTML = `<div>${m.content}</div><div class="msg-info"><span class="msg-time">${m.time}</span></div>`;
         document.getElementById('chat-box').appendChild(div);
         document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
     });
 
-    onChildChanged(messagesRef, s => {
-        const m = s.val();
-        const msgId = s.key;
-        localMessages[msgId] = m;
-        const msgEl = document.getElementById(`msg-${msgId}`);
-        if (msgEl && m.sender === config.sender) {
-            const iconContainer = msgEl.querySelector('.status-icon');
-            if (iconContainer) iconContainer.innerHTML = getTickHtml(m.sender, m.status);
-        }
-    });
-
-    const msgInput = document.getElementById('msgInput');
-    const actionBtn = document.getElementById('actionBtn');
-    msgInput.oninput = () => { actionBtn.innerHTML = msgInput.value.trim() ? "➤" : "🎙️"; };
-    actionBtn.onclick = () => {
-        if (msgInput.value.trim()) {
-            sendMsg('text', msgInput.value.trim());
-            msgInput.value = "";
-            actionBtn.innerHTML = "🎙️";
-            cancelReply();
-        } else {
-            handleVoice();
+    document.getElementById('actionBtn').onclick = () => {
+        const msg = document.getElementById('msgInput').value;
+        if(msg) {
+            push(messagesRef, { sender: config.sender, content: msg, time: getTimeFormatted() });
+            document.getElementById('msgInput').value = "";
         }
     };
 
-    async function handleVoice() {
-        if (!mediaRecorder || mediaRecorder.state === "inactive") {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                mediaRecorder.onstop = () => {
-                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const reader = new FileReader();
-                    reader.onload = e => sendMsg('audio', e.target.result);
-                    reader.readAsDataURL(blob);
-                    audioChunks = [];
-                };
-                mediaRecorder.start();
-                actionBtn.style.background = "red";
-            } catch (e) { alert("Mic permission denied."); }
-        } else {
-            mediaRecorder.stop();
-            actionBtn.style.background = "#00897b";
-        }
-    }
-
-    function compressAndSend(file) {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = (event) => {
-            const img = new Image();
-            img.src = event.target.result;
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const maxWidth = 600; 
-                const scale = maxWidth / img.width;
-                canvas.width = maxWidth;
-                canvas.height = img.height * scale;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.5);
-                sendMsg('image', compressedBase64);
-            };
-        };
-    }
-
-    [document.getElementById('fileInput'), document.getElementById('camInput')].forEach(el => {
-        el.onchange = e => {
-            const file = e.target.files[0];
-            if (file) compressAndSend(file);
-            document.getElementById('attachMenu').style.display = 'none';
-        };
-    });
-
-    document.querySelectorAll('.emoji-item').forEach(e => {
-        e.onclick = (event) => {
-            event.stopPropagation();
-            msgInput.value += e.innerText;
-            msgInput.focus();
-            actionBtn.innerHTML = "➤";
-        };
-    });
-
-    document.getElementById('profileFile').onchange = e => {
-        const reader = new FileReader();
-        reader.onload = event => {
-            document.getElementById('cropper-container').style.display = 'block';
-            if (croppieInstance) croppieInstance.destroy();
-            croppieInstance = new Croppie(document.getElementById('crop-resizer'), { viewport: { width: 150, height: 150, type: 'circle' }, boundary: { width: 250, height: 250 } });
-            croppieInstance.bind({ url: event.target.result });
-        };
-        reader.readAsDataURL(e.target.files[0]);
+    // UI Toggles
+    document.getElementById('menuToggle').onclick = (e) => {
+        e.stopPropagation();
+        const d = document.getElementById('dropdown');
+        d.style.display = d.style.display === 'block' ? 'none' : 'block';
     };
-
-    document.getElementById('cropBtn').onclick = async () => {
-        tempPicUrl = await croppieInstance.result({ type: 'base64', size: 'viewport', format: 'jpeg' });
-        document.getElementById('myCurrentPhoto').src = tempPicUrl;
-        document.getElementById('cropper-container').style.display = 'none';
-    };
-
+    document.onclick = () => { document.getElementById('dropdown').style.display = 'none'; };
+    document.getElementById('openSettings').onclick = () => { document.getElementById('settingsModal').style.display='flex'; };
     document.getElementById('saveSettingsBtn').onclick = () => {
-        config = { sender: document.getElementById('setSenderName').value, receiver: document.getElementById('setReceiverName').value, webhook: document.getElementById('setWebhook').value, pic: tempPicUrl };
+        config.sender = document.getElementById('setSenderName').value;
+        config.receiver = document.getElementById('setReceiverName').value;
         localStorage.setItem('chatConfig', JSON.stringify(config));
-        update(ref(db, `status/${config.sender}`), { photo: tempPicUrl }).then(() => location.reload());
+        location.reload();
     };
-
-    document.getElementById('menuToggle').onclick = e => { e.stopPropagation(); dropdown.style.display = dropdown.style.display==='block'?'none':'block'; };
-    document.getElementById('emojiToggle').onclick = e => { e.stopPropagation(); emojiMenu.style.display = emojiMenu.style.display==='grid'?'none':'grid'; };
-    document.getElementById('attachToggle').onclick = e => { e.stopPropagation(); attachMenu.style.display = attachMenu.style.display==='grid'?'none':'grid'; };
-    document.getElementById('openSettings').onclick = () => {
-        document.getElementById('setSenderName').value = config.sender;
-        document.getElementById('setReceiverName').value = config.receiver;
-        document.getElementById('setWebhook').value = config.webhook;
-        document.getElementById('myCurrentPhoto').src = config.pic;
-        document.getElementById('settingsModal').style.display = 'flex';
-    };
-    document.getElementById('clearChatAction').onclick = () => { if(confirm("બધું સાફ કરવું છે?")) remove(messagesRef).then(()=>location.reload()); };
-    document.onclick = () => { dropdown.style.display='none'; emojiMenu.style.display='none'; attachMenu.style.display='none'; };
 
     init();
 </script>
