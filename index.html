@@ -7,6 +7,7 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js"></script>
+    <!-- SimplePeer for WebRTC -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-peer/9.11.1/simplepeer.min.js"></script>
 
     <style>
@@ -142,6 +143,7 @@
     </div>
 </div>
 
+<!-- --- Call UI Overlay --- -->
 <div id="callOverlay">
     <div class="call-info-box" id="incomingCallInfo">
         <div class="call-user-name" id="callUserName">Manisha ❤️</div>
@@ -266,11 +268,12 @@
             }
         });
 
-        // Listen for Incoming Calls (Improved Instant Response)
+        // Instant Call Listener
         onValue(callRef, (snapshot) => {
             const data = snapshot.val();
             if (!data) return;
             
+            // જો કોલ મારા માટે છે અને અત્યારે Dialing સ્ટેટસમાં છે તો તરત UI બતાવો
             if (data.to === config.sender && data.status === 'dialing') {
                 showIncomingCall(data);
             } else if (data.status === 'ended') {
@@ -284,6 +287,9 @@
     // --- Calling Logic ---
     async function startCall(isVideo) {
         try {
+            // First cleanup any existing call data
+            await set(callRef, null); 
+
             localStream = await navigator.mediaDevices.getUserMedia({ video: isVideo, audio: true });
             document.getElementById('localVideo').srcObject = localStream;
             document.getElementById('callOverlay').style.display = 'flex';
@@ -296,6 +302,7 @@
             peer = new SimplePeer({ initiator: true, trickle: false, stream: localStream });
 
             peer.on('signal', data => {
+                // ઝડપી રિસ્પોન્સ માટે સીધું SET વાપર્યું છે
                 set(callRef, {
                     from: config.sender,
                     to: config.receiver,
@@ -314,11 +321,12 @@
             });
 
         } catch (err) {
-            alert("Error accessing camera/mic: " + err.message);
+            alert("Error: " + err.message);
         }
     }
 
     function showIncomingCall(data) {
+        // આ ફંક્શન કોલ આવતા જ ૧ સેકન્ડમાં ટ્રિગર થશે
         document.getElementById('callOverlay').style.display = 'flex';
         document.getElementById('callUserName').innerText = data.from;
         document.getElementById('callStatusText').innerText = `Incoming ${data.type} call...`;
@@ -350,8 +358,8 @@
 
                 peer.signal(JSON.parse(data.signal));
             } catch (err) {
-                alert("Permission Denied: " + err.message);
                 set(callRef, { status: 'ended' });
+                endCallUI();
             }
         };
     }
@@ -372,6 +380,7 @@
 
     document.getElementById('endCallBtn').onclick = () => {
         set(callRef, { status: 'ended' });
+        setTimeout(() => set(callRef, null), 1000); // Clean up
         endCallUI();
     };
 
@@ -503,7 +512,7 @@
                 };
                 mediaRecorder.start();
                 actionBtn.style.background = "red";
-            } catch (e) { alert("Mic permission denied."); }
+            } catch (e) { alert("Mic error."); }
         } else {
             mediaRecorder.stop();
             actionBtn.style.background = "#00897b";
