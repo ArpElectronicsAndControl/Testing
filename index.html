@@ -146,7 +146,7 @@
 <!-- --- Call UI Overlay --- -->
 <div id="callOverlay">
     <div class="call-info-box" id="incomingCallInfo">
-        <div class="call-user-name" id="callUserName">Manisha ❤️</div>
+        <div class="call-user-name" id="callUserName">Partner</div>
         <div id="callStatusText">Calling...</div>
     </div>
     <video id="remoteVideo" autoplay playsinline></video>
@@ -268,27 +268,42 @@
             }
         });
 
-        // Instant Call Listener
+        // 1 SECOND SPEED FIX: Use onChildAdded to catch the call object instantly
+        onChildAdded(callRef, (snapshot) => {
+            const data = snapshot.val();
+            const callId = snapshot.key;
+            if (!data) return;
+
+            if (data.to === config.sender && data.status === 'dialing') {
+                showIncomingCall(data, callId);
+            }
+        });
+
+        // Other listeners for status updates
         onValue(callRef, (snapshot) => {
             const data = snapshot.val();
             if (!data) return;
             
-            // જો કોલ મારા માટે છે અને અત્યારે Dialing સ્ટેટસમાં છે તો તરત UI બતાવો
-            if (data.to === config.sender && data.status === 'dialing') {
-                showIncomingCall(data);
-            } else if (data.status === 'ended') {
-                endCallUI();
-            } else if (data.status === 'accepted' && data.from === config.sender && peer) {
-                if(data.answerSignal) peer.signal(JSON.parse(data.answerSignal));
+            const activeCall = Object.values(data).find(c => c.status !== 'ended');
+            if (!activeCall) {
+                if(document.getElementById('callOverlay').style.display === 'flex') endCallUI();
+                return;
             }
+
+            // Handle signal answering if I am the initiator
+            if (activeCall.status === 'accepted' && activeCall.from === config.sender && peer) {
+                if(activeCall.answerSignal) peer.signal(JSON.parse(activeCall.answerSignal));
+            }
+            
+            if (activeCall.status === 'ended') endCallUI();
         });
     }
 
     // --- Calling Logic ---
     async function startCall(isVideo) {
         try {
-            // First cleanup any existing call data
-            await set(callRef, null); 
+            // Speed improvement: Clear old calls instantly
+            await remove(callRef);
 
             localStream = await navigator.mediaDevices.getUserMedia({ video: isVideo, audio: true });
             document.getElementById('localVideo').srcObject = localStream;
@@ -302,8 +317,8 @@
             peer = new SimplePeer({ initiator: true, trickle: false, stream: localStream });
 
             peer.on('signal', data => {
-                // ઝડપી રિસ્પોન્સ માટે સીધું SET વાપર્યું છે
-                set(callRef, {
+                // High-speed entry using push
+                push(callRef, {
                     from: config.sender,
                     to: config.receiver,
                     status: 'dialing',
@@ -325,8 +340,8 @@
         }
     }
 
-    function showIncomingCall(data) {
-        // આ ફંક્શન કોલ આવતા જ ૧ સેકન્ડમાં ટ્રિગર થશે
+    function showIncomingCall(data, callId) {
+        // Instant show
         document.getElementById('callOverlay').style.display = 'flex';
         document.getElementById('callUserName').innerText = data.from;
         document.getElementById('callStatusText').innerText = `Incoming ${data.type} call...`;
@@ -343,7 +358,7 @@
                 peer = new SimplePeer({ initiator: false, trickle: false, stream: localStream });
 
                 peer.on('signal', signalData => {
-                    update(callRef, {
+                    update(ref(db, `calls/${callId}`), {
                         status: 'accepted',
                         answerSignal: JSON.stringify(signalData)
                     });
@@ -358,7 +373,7 @@
 
                 peer.signal(JSON.parse(data.signal));
             } catch (err) {
-                set(callRef, { status: 'ended' });
+                update(ref(db, `calls/${callId}`), { status: 'ended' });
                 endCallUI();
             }
         };
@@ -378,9 +393,15 @@
         document.getElementById('localVideo').srcObject = null;
     }
 
-    document.getElementById('endCallBtn').onclick = () => {
-        set(callRef, { status: 'ended' });
-        setTimeout(() => set(callRef, null), 1000); // Clean up
+    document.getElementById('endCallBtn').onclick = async () => {
+        const snapshot = await onValue(callRef, s => s, {onlyOnce: true});
+        const data = snapshot.val();
+        if(data) {
+            Object.keys(data).forEach(key => {
+                update(ref(db, `calls/${key}`), { status: 'ended' });
+            });
+        }
+        setTimeout(() => remove(callRef), 500); 
         endCallUI();
     };
 
