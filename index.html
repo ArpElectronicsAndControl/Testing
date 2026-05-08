@@ -13,7 +13,6 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #e5ddd5; display: flex; justify-content: center; height: 100dvh; overflow: hidden; }
         .chat-container { width: 100%; max-width: 500px; background: #efe7de; display: flex; flex-direction: column; height: 100%; position: relative; }
         
-        /* Header */
         .header { background: #075e54; color: white; padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; z-index: 10; height: 65px; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .user-profile { display: flex; align-items: center; gap: 10px; }
         #displayPic { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 1.5px solid white; background: #eee; }
@@ -26,7 +25,6 @@
         .dropdown-menu { position: absolute; right: 10px; top: 55px; background: white; color: black; box-shadow: 0 2px 10px rgba(0,0,0,0.2); border-radius: 5px; display: none; width: 170px; z-index: 100; }
         .dropdown-menu div { padding: 12px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 14px; }
 
-        /* Chat Box */
         #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); scroll-behavior: smooth; }
         .message { margin-bottom: 10px; padding: 8px 12px; border-radius: 8px; max-width: 85%; word-wrap: break-word; font-size: 15px; box-shadow: 0 1px 1px rgba(0,0,0,0.1); position: relative; }
         .sent { align-self: flex-end; background: #dcf8c6; border-bottom-right-radius: 2px; }
@@ -34,7 +32,6 @@
         .msg-info { display: flex; align-items: center; justify-content: flex-end; gap: 4px; margin-top: 4px; }
         .msg-time { font-size: 10px; color: #667781; }
 
-        /* Bottom Bar */
         .bottom-bar { background: transparent; padding: 5px 8px 10px 8px; display: flex; flex-direction: column; }
         .input-area-row { display: flex; align-items: flex-end; gap: 5px; width: 100%; }
         .input-wrapper { display: flex; align-items: center; background: white; border-radius: 25px; flex: 1; padding: 2px 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
@@ -42,20 +39,18 @@
         input[type="text"] { flex: 1; border: none; outline: none; padding: 10px 5px; font-size: 16px; background: transparent; }
         .action-btn { background: #00897b; color: white; width: 48px; height: 48px; border-radius: 50%; display: flex; justify-content: center; align-items: center; border: none; font-size: 20px; cursor: pointer; }
 
-        /* Modals */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
         .modal-header { color: #075e54; border-bottom: 2px solid #075e54; margin-bottom: 20px; padding-bottom: 5px; font-weight: bold; }
-        #myCurrentPhoto { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #075e54; display: block; margin: 0 auto 20px auto; background: #eee; }
+        #myCurrentPhoto { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #075e54; display: block; margin: 0 auto 20px auto; }
         .setting-group { margin-bottom: 15px; }
-        .setting-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #333; font-size: 14px; }
-        .setting-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
+        .setting-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+        .setting-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
         .modal-footer { margin-top: 25px; display: flex; justify-content: flex-end; gap: 10px; }
         .modal-footer button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .btn-cancel { background: #eee; color: #333; }
+        .btn-cancel { background: #eee; }
         .btn-save { background: #075e54; color: white; }
 
-        /* Call UI Overlay */
         #callUI { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; flex-direction: column; align-items: center; justify-content: center; color: white; }
         #remoteVideo { width: 100%; height: 100%; object-fit: cover; }
         #localVideo { position: absolute; top: 20px; right: 20px; width: 100px; height: 140px; border-radius: 8px; border: 2px solid white; object-fit: cover; z-index: 2001; }
@@ -100,13 +95,10 @@
     </div>
 </div>
 
-<!-- Password Modal -->
 <div class="modal" id="passwordModal">
     <div class="modal-content">
         <div class="modal-header">પાસવર્ડ આપો</div>
-        <div class="setting-group">
-            <input type="password" id="adminPassword" placeholder="પાસવર્ડ અહીં લખો">
-        </div>
+        <div class="setting-group"><input type="password" id="adminPassword" placeholder="પાસવર્ડ"></div>
         <div class="modal-footer">
             <button class="btn-cancel" onclick="document.getElementById('passwordModal').style.display='none'">રદ કરો</button>
             <button class="btn-save" id="checkPasswordBtn">ઓકે</button>
@@ -114,7 +106,6 @@
     </div>
 </div>
 
-<!-- Settings Modal -->
 <div class="modal" id="settingsModal">
     <div class="modal-content">
         <div class="modal-header">Settings</div>
@@ -124,9 +115,9 @@
         <div class="setting-group">
             <label>Profile Pic:</label>
             <input type="file" id="profileFile" accept="image/*">
-            <div id="cropper-container" style="display:none; margin-top: 10px;">
+            <div id="cropper-container" style="display:none; margin-top:10px;">
                 <div id="crop-resizer"></div>
-                <button id="cropBtn" style="width:100%; background:#128c7e; color:white; padding:8px; border:none; margin-top:5px;">Confirm Photo</button>
+                <button id="cropBtn" style="width:100%; background:#128c7e; color:white; padding:8px; border:none;">Confirm</button>
             </div>
         </div>
         <div class="setting-group"><label>Webhook URL:</label><input type="text" id="setWebhook"></div>
@@ -137,25 +128,21 @@
     </div>
 </div>
 
-<!-- Incoming Call Modal -->
 <div class="modal" id="incomingCallModal">
     <div class="incoming-call">
         <h3 id="callerName">Call Incoming...</h3>
         <p id="callTypeLabel">Video Call</p>
         <div style="display: flex; gap: 20px; justify-content: center; margin-top: 20px;">
-            <button id="acceptCall" style="background: #25D366; color: white; border: none; padding: 10px 25px; border-radius: 20px; cursor: pointer;">Answer</button>
-            <button id="declineCall" style="background: #FF3B30; color: white; border: none; padding: 10px 25px; border-radius: 20px; cursor: pointer;">Decline</button>
+            <button id="acceptCall" style="background: #25D366; color: white; border: none; padding: 10px 25px; border-radius: 20px;">Answer</button>
+            <button id="declineCall" style="background: #FF3B30; color: white; border: none; padding: 10px 25px; border-radius: 20px;">Decline</button>
         </div>
     </div>
 </div>
 
-<!-- Full Call UI -->
 <div id="callUI">
     <video id="remoteVideo" autoplay playsinline></video>
     <video id="localVideo" autoplay playsinline muted></video>
-    <div class="call-controls">
-        <div class="end-call" id="endCallBtn">📞</div>
-    </div>
+    <div class="call-controls"><div class="end-call" id="endCallBtn">📞</div></div>
 </div>
 
 <script type="module">
@@ -178,26 +165,16 @@
     let tempPicUrl = config.pic;
     let croppieInstance = null;
 
-    // WebRTC Variables
     let localStream;
     let peerConnection;
     const servers = { iceServers: [{ urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] }] };
 
     function getTime() { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }); }
 
-    // UI Init
+    // Init UI
     function init() {
         document.getElementById('displayHeaderName').innerText = config.receiver + " ❤️";
         document.getElementById('displayPic').src = config.pic;
-        
-        const myStatusRef = ref(db, `status/${config.sender}`);
-        onValue(ref(db, '.info/connected'), (snap) => {
-            if (snap.val()) {
-                update(myStatusRef, { state: 'online', photo: config.pic });
-                onDisconnect(myStatusRef).update({ state: 'offline', last_seen: getTime() });
-            }
-        });
-
         onValue(ref(db, `status/${config.receiver}`), (s) => {
             const d = s.val() || {};
             const el = document.getElementById('onlineStatus');
@@ -205,6 +182,9 @@
             else { el.innerText = `Last seen ${d.last_seen || ""}`; el.classList.remove('online-active'); }
             if(d.photo) document.getElementById('displayPic').src = d.photo;
         });
+        const myStatusRef = ref(db, `status/${config.sender}`);
+        update(myStatusRef, { state: 'online', photo: config.pic });
+        onDisconnect(myStatusRef).update({ state: 'offline', last_seen: getTime() });
     }
 
     // Chat
@@ -226,91 +206,67 @@
         }
     };
 
-    // --- WebRTC CALLING LOGIC (FIXED) ---
-    async function setupPeer(type) {
+    // WebRTC Logic
+    async function setupPeer() {
         peerConnection = new RTCPeerConnection(servers);
         localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-
-        peerConnection.ontrack = (event) => {
-            document.getElementById('remoteVideo').srcObject = event.streams[0];
-        };
-
-        peerConnection.onicecandidate = (event) => {
-            if (event.candidate) {
-                push(ref(db, 'calls/candidates'), event.candidate.toJSON());
-            }
-        };
+        peerConnection.ontrack = (e) => document.getElementById('remoteVideo').srcObject = e.streams[0];
+        peerConnection.onicecandidate = (e) => { if (e.candidate) push(ref(db, 'calls/candidates'), e.candidate.toJSON()); };
     }
 
     async function startCall(type) {
-        try {
-            localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: type === 'video' });
-            document.getElementById('localVideo').srcObject = localStream;
-            document.getElementById('callUI').style.display = 'flex';
-            document.getElementById('localVideo').style.display = type === 'video' ? 'block' : 'none';
-
-            await setupPeer(type);
-            const offer = await peerConnection.createOffer();
-            await peerConnection.setLocalDescription(offer);
-
-            set(ref(db, 'calls'), {
-                offer: { type: offer.type, sdp: offer.sdp },
-                caller: config.sender,
-                callType: type,
-                status: 'ringing'
-            });
-        } catch (e) { alert("Camera/Mic permission needed."); }
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: type === 'video' });
+        document.getElementById('localVideo').srcObject = localStream;
+        document.getElementById('callUI').style.display = 'flex';
+        document.getElementById('localVideo').style.display = type === 'video' ? 'block' : 'none';
+        await setupPeer();
+        const offer = await peerConnection.createOffer();
+        await peerConnection.setLocalDescription(offer);
+        set(ref(db, 'calls'), { offer: { type: offer.type, sdp: offer.sdp }, caller: config.sender, callType: type, status: 'ringing' });
     }
 
+    // Hangup Cleanup (CRITICAL FIX)
+    function hangup() {
+        if (localStream) localStream.getTracks().forEach(t => t.stop());
+        if (peerConnection) peerConnection.close();
+        document.getElementById('callUI').style.display = 'none';
+        document.getElementById('incomingCallModal').style.display = 'none';
+        document.getElementById('remoteVideo').srcObject = null;
+        document.getElementById('localVideo').srcObject = null;
+    }
+
+    // Call Listener
     onValue(ref(db, 'calls'), async (snapshot) => {
         const data = snapshot.val();
-        if (!data) return;
+        if (!data) { hangup(); return; } // If data is deleted by either side, end call for both.
 
-        // Receiver side
         if (data.status === 'ringing' && data.caller !== config.sender) {
             document.getElementById('incomingCallModal').style.display = 'flex';
             document.getElementById('callerName').innerText = data.caller;
-            document.getElementById('callTypeLabel').innerText = data.callType === 'video' ? "Video Call" : "Audio Call";
-
             document.getElementById('acceptCall').onclick = async () => {
                 document.getElementById('incomingCallModal').style.display = 'none';
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: data.callType === 'video' });
                 document.getElementById('localVideo').srcObject = localStream;
-                document.getElementById('localVideo').style.display = data.callType === 'video' ? 'block' : 'none';
                 document.getElementById('callUI').style.display = 'flex';
-
-                await setupPeer(data.callType);
+                await setupPeer();
                 await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
                 const answer = await peerConnection.createAnswer();
                 await peerConnection.setLocalDescription(answer);
-                
                 update(ref(db, 'calls'), { answer: { type: answer.type, sdp: answer.sdp }, status: 'accepted' });
             };
-
-            document.getElementById('declineCall').onclick = () => { remove(ref(db, 'calls')); document.getElementById('incomingCallModal').style.display = 'none'; };
+            document.getElementById('declineCall').onclick = () => remove(ref(db, 'calls'));
         }
 
-        // Caller side: when answer received
-        if (data.status === 'accepted' && data.answer && data.caller === config.sender) {
-            if (!peerConnection.currentRemoteDescription) {
-                await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-            }
+        if (data.status === 'accepted' && data.answer && data.caller === config.sender && !peerConnection.currentRemoteDescription) {
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
         }
     });
 
-    onChildAdded(ref(db, 'calls/candidates'), (snapshot) => {
-        if (peerConnection) {
-            peerConnection.addIceCandidate(new RTCIceCandidate(snapshot.val()));
-        }
-    });
+    onChildAdded(ref(db, 'calls/candidates'), (s) => { if (peerConnection) peerConnection.addIceCandidate(new RTCIceCandidate(s.val())); });
 
-    document.getElementById('endCallBtn').onclick = () => {
-        if (localStream) localStream.getTracks().forEach(t => t.stop());
-        remove(ref(db, 'calls'));
-        location.reload();
-    };
+    document.getElementById('endCallBtn').onclick = () => remove(ref(db, 'calls'));
 
-    // Settings
+    // Settings & Others
     document.getElementById('menuToggle').onclick = (e) => { e.stopPropagation(); dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block'; };
     document.getElementById('openSettings').onclick = () => { dropdown.style.display='none'; document.getElementById('passwordModal').style.display='flex'; };
     document.getElementById('checkPasswordBtn').onclick = () => {
@@ -321,9 +277,8 @@
             document.getElementById('setWebhook').value = config.webhook;
             document.getElementById('myCurrentPhoto').src = config.pic;
             document.getElementById('settingsModal').style.display = 'flex';
-        } else alert("Wrong Password!");
+        } else alert("Wrong!");
     };
-
     document.getElementById('profileFile').onchange = e => {
         const reader = new FileReader();
         reader.onload = ev => {
@@ -334,22 +289,19 @@
         };
         reader.readAsDataURL(e.target.files[0]);
     };
-
     document.getElementById('cropBtn').onclick = async () => {
         tempPicUrl = await croppieInstance.result({ type: 'base64', size: 'viewport' });
         document.getElementById('myCurrentPhoto').src = tempPicUrl;
         document.getElementById('cropper-container').style.display = 'none';
     };
-
     document.getElementById('saveSettingsBtn').onclick = () => {
         const cfg = { sender: document.getElementById('setSenderName').value, receiver: document.getElementById('setReceiverName').value, webhook: document.getElementById('setWebhook').value, pic: tempPicUrl };
         localStorage.setItem('chatConfig', JSON.stringify(cfg));
         location.reload();
     };
-
     document.getElementById('startAudioCall').onclick = () => startCall('audio');
     document.getElementById('startVideoCall').onclick = () => startCall('video');
-    document.getElementById('clearChatAction').onclick = () => { if(confirm("Clear chat?")) remove(ref(db, 'chats')).then(()=>location.reload()); };
+    document.getElementById('clearChatAction').onclick = () => { if(confirm("Clear?")) remove(ref(db, 'chats')).then(()=>location.reload()); };
     document.onclick = () => dropdown.style.display = 'none';
 
     init();
