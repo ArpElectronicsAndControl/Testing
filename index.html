@@ -7,7 +7,6 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js"></script>
-    <!-- SimplePeer for WebRTC -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-peer/9.11.1/simplepeer.min.js"></script>
 
     <style>
@@ -77,13 +76,13 @@
 
         /* --- Call UI Styles --- */
         #callOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #075e54; z-index: 2000; flex-direction: column; align-items: center; justify-content: center; color: white; }
-        #remoteVideo { width: 100%; height: 100%; object-fit: cover; }
-        #localVideo { width: 100px; height: 150px; position: absolute; top: 20px; right: 20px; border: 2px solid white; border-radius: 10px; object-fit: cover; background: #333; }
+        #remoteVideo { width: 100%; height: 100%; object-fit: cover; background: #000; }
+        #localVideo { width: 100px; height: 150px; position: absolute; top: 20px; right: 20px; border: 2px solid white; border-radius: 10px; object-fit: cover; background: #333; z-index: 2002; }
         .call-controls { position: absolute; bottom: 50px; display: flex; gap: 30px; z-index: 2001; }
         .call-btn { width: 65px; height: 65px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         .btn-end { background: #ff3b30; color: white; }
         .btn-accept { background: #28cd41; color: white; }
-        .call-info-box { text-align: center; margin-bottom: 30px; }
+        .call-info-box { text-align: center; margin-bottom: 30px; position: absolute; top: 100px; width: 100%; z-index: 2001; }
         .call-user-name { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
     </style>
 </head>
@@ -143,7 +142,6 @@
     </div>
 </div>
 
-<!-- --- Call UI Overlay --- -->
 <div id="callOverlay">
     <div class="call-info-box" id="incomingCallInfo">
         <div class="call-user-name" id="callUserName">Manisha ❤️</div>
@@ -268,13 +266,17 @@
             }
         });
 
-        // Listen for Incoming Calls
+        // Listen for Incoming Calls (Improved Instant Response)
         onValue(callRef, (snapshot) => {
             const data = snapshot.val();
-            if (data && data.to === config.sender && data.status === 'dialing') {
+            if (!data) return;
+            
+            if (data.to === config.sender && data.status === 'dialing') {
                 showIncomingCall(data);
-            } else if (data && data.status === 'ended') {
+            } else if (data.status === 'ended') {
                 endCallUI();
+            } else if (data.status === 'accepted' && data.from === config.sender && peer) {
+                if(data.answerSignal) peer.signal(JSON.parse(data.answerSignal));
             }
         });
     }
@@ -288,7 +290,9 @@
             document.getElementById('callUserName').innerText = config.receiver;
             document.getElementById('callStatusText').innerText = "Calling...";
             document.getElementById('acceptBtn').style.display = 'none';
+            document.getElementById('remoteVideo').style.display = isVideo ? 'block' : 'none';
 
+            if (peer) peer.destroy();
             peer = new SimplePeer({ initiator: true, trickle: false, stream: localStream });
 
             peer.on('signal', data => {
@@ -297,21 +301,16 @@
                     to: config.receiver,
                     status: 'dialing',
                     signal: JSON.stringify(data),
-                    type: isVideo ? 'video' : 'audio'
+                    type: isVideo ? 'video' : 'audio',
+                    timestamp: Date.now()
                 });
             });
 
             peer.on('stream', stream => {
-                document.getElementById('remoteVideo').srcObject = stream;
+                const rVideo = document.getElementById('remoteVideo');
+                rVideo.srcObject = stream;
+                rVideo.style.display = 'block';
                 document.getElementById('callStatusText').innerText = "Connected";
-            });
-
-            // Handle when someone accepts
-            onValue(callRef, (snap) => {
-                const val = snap.val();
-                if (val && val.status === 'accepted' && val.to === config.receiver) {
-                    peer.signal(JSON.parse(val.answerSignal));
-                }
             });
 
         } catch (err) {
@@ -327,34 +326,45 @@
         document.getElementById('remoteVideo').style.display = 'none';
 
         document.getElementById('acceptBtn').onclick = async () => {
-            localStream = await navigator.mediaDevices.getUserMedia({ video: data.type === 'video', audio: true });
-            document.getElementById('localVideo').srcObject = localStream;
-            document.getElementById('remoteVideo').style.display = 'block';
-            document.getElementById('acceptBtn').style.display = 'none';
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: data.type === 'video', audio: true });
+                document.getElementById('localVideo').srcObject = localStream;
+                document.getElementById('acceptBtn').style.display = 'none';
 
-            peer = new SimplePeer({ initiator: false, trickle: false, stream: localStream });
+                if (peer) peer.destroy();
+                peer = new SimplePeer({ initiator: false, trickle: false, stream: localStream });
 
-            peer.on('signal', signalData => {
-                update(callRef, {
-                    status: 'accepted',
-                    answerSignal: JSON.stringify(signalData)
+                peer.on('signal', signalData => {
+                    update(callRef, {
+                        status: 'accepted',
+                        answerSignal: JSON.stringify(signalData)
+                    });
                 });
-            });
 
-            peer.on('stream', stream => {
-                document.getElementById('remoteVideo').srcObject = stream;
-                document.getElementById('callStatusText').innerText = "Connected";
-            });
+                peer.on('stream', stream => {
+                    const rVideo = document.getElementById('remoteVideo');
+                    rVideo.srcObject = stream;
+                    rVideo.style.display = 'block';
+                    document.getElementById('callStatusText').innerText = "Connected";
+                });
 
-            peer.signal(JSON.parse(data.signal));
+                peer.signal(JSON.parse(data.signal));
+            } catch (err) {
+                alert("Permission Denied: " + err.message);
+                set(callRef, { status: 'ended' });
+            }
         };
     }
 
     function endCallUI() {
         if (localStream) {
             localStream.getTracks().forEach(track => track.stop());
+            localStream = null;
         }
-        if (peer) peer.destroy();
+        if (peer) {
+            peer.destroy();
+            peer = null;
+        }
         document.getElementById('callOverlay').style.display = 'none';
         document.getElementById('remoteVideo').srcObject = null;
         document.getElementById('localVideo').srcObject = null;
@@ -368,7 +378,7 @@
     document.getElementById('startAudioCall').onclick = () => startCall(false);
     document.getElementById('startVideoCall').onclick = () => startCall(true);
 
-    // --- Message Logic (No Changes) ---
+    // --- Message Logic ---
     function sendMsg(type, content) {
         const msgData = { 
             sender: config.sender, 
