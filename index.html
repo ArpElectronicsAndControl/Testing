@@ -7,7 +7,6 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js"></script>
-    <!-- SimplePeer for WebRTC -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-peer/9.11.1/simplepeer.min.js"></script>
 
     <style>
@@ -143,10 +142,9 @@
     </div>
 </div>
 
-<!-- --- Call UI Overlay --- -->
 <div id="callOverlay">
     <div class="call-info-box" id="incomingCallInfo">
-        <div class="call-user-name" id="callUserName">Partner</div>
+        <div class="call-user-name" id="callUserName">Manisha ❤️</div>
         <div id="callStatusText">Calling...</div>
     </div>
     <video id="remoteVideo" autoplay playsinline></video>
@@ -229,7 +227,7 @@
     // Call Variables
     let localStream;
     let peer;
-    const callRef = ref(db, 'calls');
+    const myCallRef = ref(db, `calls/${config.sender}`); // મારો કોલિંગ પાથ
 
     function getTimeFormatted() {
         return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
@@ -268,43 +266,30 @@
             }
         });
 
-        // 1 SECOND SPEED FIX: Use onChildAdded to catch the call object instantly
-        onChildAdded(callRef, (snapshot) => {
-            const data = snapshot.val();
-            const callId = snapshot.key;
-            if (!data) return;
-
-            if (data.to === config.sender && data.status === 'dialing') {
-                showIncomingCall(data, callId);
-            }
-        });
-
-        // Other listeners for status updates
-        onValue(callRef, (snapshot) => {
+        // --- સુધારેલ કોલ લિસનર (Instant Response) ---
+        onValue(myCallRef, (snapshot) => {
             const data = snapshot.val();
             if (!data) return;
             
-            const activeCall = Object.values(data).find(c => c.status !== 'ended');
-            if (!activeCall) {
-                if(document.getElementById('callOverlay').style.display === 'flex') endCallUI();
-                return;
+            // જો કોઈ મને કોલ કરે (Dialing status)
+            if (data.status === 'dialing') {
+                showIncomingCall(data);
+            } 
+            // જો મેં કોલ કર્યો હોય અને સામેવાળાએ Accept કર્યો હોય
+            else if (data.status === 'accepted' && peer) {
+                if(data.answerSignal) peer.signal(JSON.parse(data.answerSignal));
             }
-
-            // Handle signal answering if I am the initiator
-            if (activeCall.status === 'accepted' && activeCall.from === config.sender && peer) {
-                if(activeCall.answerSignal) peer.signal(JSON.parse(activeCall.answerSignal));
+            // કોલ એન્ડ થયો હોય
+            else if (data.status === 'ended') {
+                endCallUI();
             }
-            
-            if (activeCall.status === 'ended') endCallUI();
         });
     }
 
     // --- Calling Logic ---
     async function startCall(isVideo) {
         try {
-            // Speed improvement: Clear old calls instantly
-            await remove(callRef);
-
+            const receiverCallRef = ref(db, `calls/${config.receiver}`);
             localStream = await navigator.mediaDevices.getUserMedia({ video: isVideo, audio: true });
             document.getElementById('localVideo').srcObject = localStream;
             document.getElementById('callOverlay').style.display = 'flex';
@@ -317,8 +302,8 @@
             peer = new SimplePeer({ initiator: true, trickle: false, stream: localStream });
 
             peer.on('signal', data => {
-                // High-speed entry using push
-                push(callRef, {
+                // સામેવાળા ના પાથ પર ડેટા મૂકો (તરત દેખાશે)
+                set(receiverCallRef, {
                     from: config.sender,
                     to: config.receiver,
                     status: 'dialing',
@@ -340,8 +325,7 @@
         }
     }
 
-    function showIncomingCall(data, callId) {
-        // Instant show
+    function showIncomingCall(data) {
         document.getElementById('callOverlay').style.display = 'flex';
         document.getElementById('callUserName').innerText = data.from;
         document.getElementById('callStatusText').innerText = `Incoming ${data.type} call...`;
@@ -350,6 +334,7 @@
 
         document.getElementById('acceptBtn').onclick = async () => {
             try {
+                const senderCallRef = ref(db, `calls/${data.from}`);
                 localStream = await navigator.mediaDevices.getUserMedia({ video: data.type === 'video', audio: true });
                 document.getElementById('localVideo').srcObject = localStream;
                 document.getElementById('acceptBtn').style.display = 'none';
@@ -358,10 +343,13 @@
                 peer = new SimplePeer({ initiator: false, trickle: false, stream: localStream });
 
                 peer.on('signal', signalData => {
-                    update(ref(db, `calls/${callId}`), {
+                    // કોલર ના પાથ પર Accept સિગ્નલ મોકલો
+                    update(senderCallRef, {
                         status: 'accepted',
                         answerSignal: JSON.stringify(signalData)
                     });
+                    // મારા પાથ પર પણ સ્ટેટસ અપડેટ કરો
+                    update(myCallRef, { status: 'accepted' });
                 });
 
                 peer.on('stream', stream => {
@@ -373,8 +361,8 @@
 
                 peer.signal(JSON.parse(data.signal));
             } catch (err) {
-                update(ref(db, `calls/${callId}`), { status: 'ended' });
-                endCallUI();
+                alert("Permission Denied: " + err.message);
+                remove(myCallRef);
             }
         };
     }
@@ -393,15 +381,11 @@
         document.getElementById('localVideo').srcObject = null;
     }
 
-    document.getElementById('endCallBtn').onclick = async () => {
-        const snapshot = await onValue(callRef, s => s, {onlyOnce: true});
-        const data = snapshot.val();
-        if(data) {
-            Object.keys(data).forEach(key => {
-                update(ref(db, `calls/${key}`), { status: 'ended' });
-            });
-        }
-        setTimeout(() => remove(callRef), 500); 
+    document.getElementById('endCallBtn').onclick = () => {
+        // બંનેના પાથ ક્લિયર કરો
+        remove(ref(db, `calls/${config.sender}`));
+        remove(ref(db, `calls/${config.receiver}`));
+        set(ref(db, `calls/${config.receiver}`), { status: 'ended' });
         endCallUI();
     };
 
@@ -533,7 +517,7 @@
                 };
                 mediaRecorder.start();
                 actionBtn.style.background = "red";
-            } catch (e) { alert("Mic error."); }
+            } catch (e) { alert("Mic permission denied."); }
         } else {
             mediaRecorder.stop();
             actionBtn.style.background = "#00897b";
