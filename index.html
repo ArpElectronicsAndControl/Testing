@@ -58,6 +58,29 @@
         input[type="text"] { flex: 1; border: none; outline: none; padding: 10px 5px; font-size: 16px; background: transparent; }
         .action-btn { background: #00897b; color: white; width: 48px; height: 48px; border-radius: 50%; display: flex; justify-content: center; align-items: center; border: none; font-size: 20px; cursor: pointer; flex-shrink: 0; }
 
+        /* --- WhatsApp Call Theme Styles --- */
+        #callOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0b141a; z-index: 2000; flex-direction: column; align-items: center; justify-content: space-between; color: white; padding: 60px 0; }
+        #remoteVideo { width: 100%; height: 100%; object-fit: cover; background: #000; position: absolute; top: 0; left: 0; z-index: 2001; display: none; }
+        #localVideo { width: 90px; height: 130px; position: absolute; top: 20px; right: 20px; border: 1.5px solid rgba(255,255,255,0.3); border-radius: 12px; object-fit: cover; background: #333; z-index: 2005; display: none; }
+        
+        .call-info-box { text-align: center; z-index: 2002; position: relative; }
+        .call-user-name { font-size: 28px; font-weight: 500; margin-bottom: 8px; color: #fff; }
+        #callStatusText { font-size: 16px; color: #aebac1; letter-spacing: 0.5px; }
+
+        .call-controls { display: flex; justify-content: space-around; width: 100%; max-width: 320px; z-index: 2003; margin-bottom: 20px; position: relative; }
+        .call-btn { width: 62px; height: 62px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; border: none; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+        .call-btn:active { transform: scale(0.9); }
+        
+        .btn-end { background: #ea0038; color: white; }
+        .btn-accept { background: #01d266; color: white; animation: pulse-green 2s infinite; }
+
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(1, 210, 102, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(1, 210, 102, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(1, 210, 102, 0); }
+        }
+
+        /* --- Modals & Other --- */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
         .modal-header { color: #075e54; border-bottom: 2px solid #075e54; margin-bottom: 20px; padding-bottom: 5px; font-size: 1.2rem; font-weight: bold; }
@@ -73,17 +96,6 @@
         .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
         .info-label { color: #667781; font-size: 14px; }
         .info-time { font-weight: 500; color: #333; font-size: 14px; }
-
-        /* --- Call UI Styles --- */
-        #callOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #075e54; z-index: 2000; flex-direction: column; align-items: center; justify-content: center; color: white; }
-        #remoteVideo { width: 100%; height: 100%; object-fit: cover; background: #000; }
-        #localVideo { width: 100px; height: 150px; position: absolute; top: 20px; right: 20px; border: 2px solid white; border-radius: 10px; object-fit: cover; background: #333; z-index: 2002; }
-        .call-controls { position: absolute; bottom: 50px; display: flex; gap: 30px; z-index: 2001; }
-        .call-btn { width: 65px; height: 65px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .btn-end { background: #ff3b30; color: white; }
-        .btn-accept { background: #28cd41; color: white; }
-        .call-info-box { text-align: center; margin-bottom: 30px; position: absolute; top: 100px; width: 100%; z-index: 2001; }
-        .call-user-name { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -142,17 +154,19 @@
     </div>
 </div>
 
+<!-- WhatsApp Style Call Overlay -->
 <div id="callOverlay">
-    <div class="call-info-box" id="incomingCallInfo">
+    <div class="call-info-box">
         <div class="call-user-name" id="callUserName">Manisha ❤️</div>
-        <div id="callStatusText">Calling...</div>
+        <div id="callStatusText">WhatsApp calling...</div>
     </div>
+    
     <video id="remoteVideo" autoplay playsinline></video>
     <video id="localVideo" autoplay muted playsinline></video>
     
     <div class="call-controls">
+        <button class="call-btn btn-end" id="endCallBtn">✕</button>
         <button class="call-btn btn-accept" id="acceptBtn" style="display:none;">📞</button>
-        <button class="call-btn btn-end" id="endCallBtn">🛑</button>
     </div>
 </div>
 
@@ -227,7 +241,7 @@
     // Call Variables
     let localStream;
     let peer;
-    const myCallRef = ref(db, `calls/${config.sender}`); // મારો કોલિંગ પાથ
+    const myCallRef = ref(db, `calls/${config.sender}`);
 
     function getTimeFormatted() {
         return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
@@ -266,23 +280,13 @@
             }
         });
 
-        // --- સુધારેલ કોલ લિસનર (Instant Response) ---
+        // Fast Calling Listener
         onValue(myCallRef, (snapshot) => {
             const data = snapshot.val();
             if (!data) return;
-            
-            // જો કોઈ મને કોલ કરે (Dialing status)
-            if (data.status === 'dialing') {
-                showIncomingCall(data);
-            } 
-            // જો મેં કોલ કર્યો હોય અને સામેવાળાએ Accept કર્યો હોય
-            else if (data.status === 'accepted' && peer) {
-                if(data.answerSignal) peer.signal(JSON.parse(data.answerSignal));
-            }
-            // કોલ એન્ડ થયો હોય
-            else if (data.status === 'ended') {
-                endCallUI();
-            }
+            if (data.status === 'dialing') showIncomingCall(data);
+            else if (data.status === 'accepted' && peer && data.answerSignal) peer.signal(JSON.parse(data.answerSignal));
+            else if (data.status === 'ended') endCallUI();
         });
     }
 
@@ -291,18 +295,21 @@
         try {
             const receiverCallRef = ref(db, `calls/${config.receiver}`);
             localStream = await navigator.mediaDevices.getUserMedia({ video: isVideo, audio: true });
-            document.getElementById('localVideo').srcObject = localStream;
+            
             document.getElementById('callOverlay').style.display = 'flex';
             document.getElementById('callUserName').innerText = config.receiver;
-            document.getElementById('callStatusText').innerText = "Calling...";
+            document.getElementById('callStatusText').innerText = isVideo ? "WhatsApp Video Call..." : "WhatsApp Voice Call...";
             document.getElementById('acceptBtn').style.display = 'none';
-            document.getElementById('remoteVideo').style.display = isVideo ? 'block' : 'none';
+
+            if(isVideo) {
+                document.getElementById('localVideo').style.display = 'block';
+                document.getElementById('localVideo').srcObject = localStream;
+            }
 
             if (peer) peer.destroy();
             peer = new SimplePeer({ initiator: true, trickle: false, stream: localStream });
 
             peer.on('signal', data => {
-                // સામેવાળા ના પાથ પર ડેટા મૂકો (તરત દેખાશે)
                 set(receiverCallRef, {
                     from: config.sender,
                     to: config.receiver,
@@ -317,38 +324,36 @@
                 const rVideo = document.getElementById('remoteVideo');
                 rVideo.srcObject = stream;
                 rVideo.style.display = 'block';
-                document.getElementById('callStatusText').innerText = "Connected";
+                document.getElementById('callStatusText').innerText = "Ringing...";
             });
 
         } catch (err) {
-            alert("Error: " + err.message);
+            alert("Mic/Cam Error: " + err.message);
         }
     }
 
     function showIncomingCall(data) {
         document.getElementById('callOverlay').style.display = 'flex';
         document.getElementById('callUserName').innerText = data.from;
-        document.getElementById('callStatusText').innerText = `Incoming ${data.type} call...`;
-        document.getElementById('acceptBtn').style.display = 'block';
-        document.getElementById('remoteVideo').style.display = 'none';
+        document.getElementById('callStatusText').innerText = `Incoming WhatsApp ${data.type} call...`;
+        document.getElementById('acceptBtn').style.display = 'flex';
 
         document.getElementById('acceptBtn').onclick = async () => {
             try {
                 const senderCallRef = ref(db, `calls/${data.from}`);
                 localStream = await navigator.mediaDevices.getUserMedia({ video: data.type === 'video', audio: true });
-                document.getElementById('localVideo').srcObject = localStream;
+                
                 document.getElementById('acceptBtn').style.display = 'none';
+                if(data.type === 'video') {
+                    document.getElementById('localVideo').style.display = 'block';
+                    document.getElementById('localVideo').srcObject = localStream;
+                }
 
                 if (peer) peer.destroy();
                 peer = new SimplePeer({ initiator: false, trickle: false, stream: localStream });
 
                 peer.on('signal', signalData => {
-                    // કોલર ના પાથ પર Accept સિગ્નલ મોકલો
-                    update(senderCallRef, {
-                        status: 'accepted',
-                        answerSignal: JSON.stringify(signalData)
-                    });
-                    // મારા પાથ પર પણ સ્ટેટસ અપડેટ કરો
+                    update(senderCallRef, { status: 'accepted', answerSignal: JSON.stringify(signalData) });
                     update(myCallRef, { status: 'accepted' });
                 });
 
@@ -361,28 +366,23 @@
 
                 peer.signal(JSON.parse(data.signal));
             } catch (err) {
-                alert("Permission Denied: " + err.message);
+                alert("Permission Denied.");
                 remove(myCallRef);
             }
         };
     }
 
     function endCallUI() {
-        if (localStream) {
-            localStream.getTracks().forEach(track => track.stop());
-            localStream = null;
-        }
-        if (peer) {
-            peer.destroy();
-            peer = null;
-        }
+        if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; }
+        if (peer) { peer.destroy(); peer = null; }
         document.getElementById('callOverlay').style.display = 'none';
         document.getElementById('remoteVideo').srcObject = null;
         document.getElementById('localVideo').srcObject = null;
+        document.getElementById('remoteVideo').style.display = 'none';
+        document.getElementById('localVideo').style.display = 'none';
     }
 
     document.getElementById('endCallBtn').onclick = () => {
-        // બંનેના પાથ ક્લિયર કરો
         remove(ref(db, `calls/${config.sender}`));
         remove(ref(db, `calls/${config.receiver}`));
         set(ref(db, `calls/${config.receiver}`), { status: 'ended' });
@@ -394,15 +394,7 @@
 
     // --- Message Logic ---
     function sendMsg(type, content) {
-        const msgData = { 
-            sender: config.sender, 
-            type, 
-            content, 
-            time: getTimeFormatted(),
-            status: 'sent',
-            sentTime: getTimeFormatted(),
-            readTime: ""
-        };
+        const msgData = { sender: config.sender, type, content, time: getTimeFormatted(), status: 'sent', sentTime: getTimeFormatted(), readTime: "" };
         if (replyingTo) msgData.replyTo = replyingTo;
         push(messagesRef, msgData);
         if(config.webhook && type === 'text') fetch(`${config.webhook}?from=${config.sender}&msg=${encodeURIComponent(content)}`).catch(()=>{});
@@ -426,44 +418,16 @@
         const m = s.val();
         const msgId = s.key;
         localMessages[msgId] = m;
-        
-        if (m.sender !== config.sender && m.status === 'sent') {
-            update(ref(db, `chats/${msgId}`), { status: 'read', readTime: getTimeFormatted() });
-        }
-
+        if (m.sender !== config.sender && m.status === 'sent') update(ref(db, `chats/${msgId}`), { status: 'read', readTime: getTimeFormatted() });
         const div = document.createElement('div');
         div.className = `message ${m.sender === config.sender ? 'sent' : 'received'}`;
         div.id = `msg-${msgId}`;
-        
-        let replyHtml = '';
-        if (m.replyTo) {
-            const displayName = m.replyTo.sender === config.sender ? "You" : m.replyTo.sender;
-            replyHtml = `<div class="reply-container"><strong>${displayName}</strong><br>${m.replyTo.content.substring(0, 50)}</div>`;
-        }
-
-        let contentHtml = '';
-        if (m.type === 'image') contentHtml = `<img src="${m.content}" class="chat-img" loading="lazy">`;
-        else if (m.type === 'audio') contentHtml = `<audio controls src="${m.content}" style="width:200px;"></audio>`;
-        else contentHtml = `<div>${m.content}</div>`;
-        
-        div.innerHTML = `${replyHtml}${contentHtml}
-            <div class="msg-info">
-                <span class="msg-time">${m.time}</span>
-                <span class="status-icon">${getTickHtml(m.sender, m.status)}</span>
-            </div>`;
-
-        let pressTimer;
-        div.addEventListener('touchstart', () => {
-            pressTimer = window.setTimeout(() => {
-                div.dataset.longpressed = "true";
-                showMessageInfo(msgId);
-            }, 600);
-        });
-        div.addEventListener('touchend', () => {
-            clearTimeout(pressTimer);
-            setTimeout(() => { div.dataset.longpressed = "false"; }, 100);
-        });
-
+        let replyHtml = m.replyTo ? `<div class="reply-container"><strong>${m.replyTo.sender === config.sender ? "You" : m.replyTo.sender}</strong><br>${m.replyTo.content.substring(0, 50)}</div>` : '';
+        let contentHtml = m.type === 'image' ? `<img src="${m.content}" class="chat-img" loading="lazy">` : (m.type === 'audio' ? `<audio controls src="${m.content}" style="width:200px;"></audio>` : `<div>${m.content}</div>`);
+        div.innerHTML = `${replyHtml}${contentHtml}<div class="msg-info"><span class="msg-time">${m.time}</span><span class="status-icon">${getTickHtml(m.sender, m.status)}</span></div>`;
+        let pt;
+        div.addEventListener('touchstart', () => pt = window.setTimeout(() => { div.dataset.longpressed = "true"; showMessageInfo(msgId); }, 600));
+        div.addEventListener('touchend', () => { clearTimeout(pt); setTimeout(() => div.dataset.longpressed = "false", 100); });
         div.onclick = () => {
             if (div.dataset.longpressed === "true") return;
             replyingTo = { sender: m.sender, content: m.type === 'text' ? m.content : `[${m.type}]` };
@@ -472,14 +436,12 @@
             document.getElementById('replyPreview').style.display = 'block';
             msgInput.focus();
         };
-
         document.getElementById('chat-box').appendChild(div);
         document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
     });
 
     onChildChanged(messagesRef, s => {
-        const m = s.val();
-        const msgId = s.key;
+        const m = s.val(); const msgId = s.key;
         localMessages[msgId] = m;
         const msgEl = document.getElementById(`msg-${msgId}`);
         if (msgEl && m.sender === config.sender) {
@@ -490,16 +452,10 @@
 
     const msgInput = document.getElementById('msgInput');
     const actionBtn = document.getElementById('actionBtn');
-    msgInput.oninput = () => { actionBtn.innerHTML = msgInput.value.trim() ? "➤" : "🎙️"; };
+    msgInput.oninput = () => actionBtn.innerHTML = msgInput.value.trim() ? "➤" : "🎙️";
     actionBtn.onclick = () => {
-        if (msgInput.value.trim()) {
-            sendMsg('text', msgInput.value.trim());
-            msgInput.value = "";
-            actionBtn.innerHTML = "🎙️";
-            cancelReply();
-        } else {
-            handleVoice();
-        }
+        if (msgInput.value.trim()) { sendMsg('text', msgInput.value.trim()); msgInput.value = ""; actionBtn.innerHTML = "🎙️"; cancelReply(); }
+        else handleVoice();
     };
 
     async function handleVoice() {
@@ -517,53 +473,27 @@
                 };
                 mediaRecorder.start();
                 actionBtn.style.background = "red";
-            } catch (e) { alert("Mic permission denied."); }
-        } else {
-            mediaRecorder.stop();
-            actionBtn.style.background = "#00897b";
-        }
+            } catch (e) { alert("Mic error."); }
+        } else { mediaRecorder.stop(); actionBtn.style.background = "#00897b"; }
     }
 
     function compressAndSend(file) {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
+        const reader = new FileReader(); reader.readAsDataURL(file);
         reader.onload = (event) => {
-            const img = new Image();
-            img.src = event.target.result;
+            const img = new Image(); img.src = event.target.result;
             img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const maxWidth = 600; 
-                const scale = maxWidth / img.width;
-                canvas.width = maxWidth;
-                canvas.height = img.height * scale;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.5);
-                sendMsg('image', compressedBase64);
+                const canvas = document.createElement('canvas'); const maxWidth = 600; const scale = maxWidth / img.width;
+                canvas.width = maxWidth; canvas.height = img.height * scale;
+                const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                sendMsg('image', canvas.toDataURL('image/jpeg', 0.5));
             };
         };
     }
 
-    [document.getElementById('fileInput'), document.getElementById('camInput')].forEach(el => {
-        el.onchange = e => {
-            const file = e.target.files[0];
-            if (file) compressAndSend(file);
-            document.getElementById('attachMenu').style.display = 'none';
-        };
-    });
-
-    document.querySelectorAll('.emoji-item').forEach(e => {
-        e.onclick = (event) => {
-            event.stopPropagation();
-            msgInput.value += e.innerText;
-            msgInput.focus();
-            actionBtn.innerHTML = "➤";
-        };
-    });
-
+    [document.getElementById('fileInput'), document.getElementById('camInput')].forEach(el => el.onchange = e => { if (e.target.files[0]) compressAndSend(e.target.files[0]); document.getElementById('attachMenu').style.display = 'none'; });
+    document.querySelectorAll('.emoji-item').forEach(e => e.onclick = (event) => { event.stopPropagation(); msgInput.value += e.innerText; actionBtn.innerHTML = "➤"; });
     document.getElementById('profileFile').onchange = e => {
-        const reader = new FileReader();
-        reader.onload = event => {
+        const reader = new FileReader(); reader.onload = event => {
             document.getElementById('cropper-container').style.display = 'block';
             if (croppieInstance) croppieInstance.destroy();
             croppieInstance = new Croppie(document.getElementById('crop-resizer'), { viewport: { width: 150, height: 150, type: 'circle' }, boundary: { width: 250, height: 250 } });
@@ -571,27 +501,18 @@
         };
         reader.readAsDataURL(e.target.files[0]);
     };
-
-    document.getElementById('cropBtn').onclick = async () => {
-        tempPicUrl = await croppieInstance.result({ type: 'base64', size: 'viewport', format: 'jpeg' });
-        document.getElementById('myCurrentPhoto').src = tempPicUrl;
-        document.getElementById('cropper-container').style.display = 'none';
-    };
-
+    document.getElementById('cropBtn').onclick = async () => { tempPicUrl = await croppieInstance.result({ type: 'base64', size: 'viewport', format: 'jpeg' }); document.getElementById('myCurrentPhoto').src = tempPicUrl; document.getElementById('cropper-container').style.display = 'none'; };
     document.getElementById('saveSettingsBtn').onclick = () => {
         config = { sender: document.getElementById('setSenderName').value, receiver: document.getElementById('setReceiverName').value, webhook: document.getElementById('setWebhook').value, pic: tempPicUrl };
         localStorage.setItem('chatConfig', JSON.stringify(config));
         update(ref(db, `status/${config.sender}`), { photo: tempPicUrl }).then(() => location.reload());
     };
-
     document.getElementById('menuToggle').onclick = e => { e.stopPropagation(); dropdown.style.display = dropdown.style.display==='block'?'none':'block'; };
     document.getElementById('emojiToggle').onclick = e => { e.stopPropagation(); emojiMenu.style.display = emojiMenu.style.display==='grid'?'none':'grid'; };
     document.getElementById('attachToggle').onclick = e => { e.stopPropagation(); attachMenu.style.display = attachMenu.style.display==='grid'?'none':'grid'; };
     document.getElementById('openSettings').onclick = () => {
-        document.getElementById('setSenderName').value = config.sender;
-        document.getElementById('setReceiverName').value = config.receiver;
-        document.getElementById('setWebhook').value = config.webhook;
-        document.getElementById('myCurrentPhoto').src = config.pic;
+        document.getElementById('setSenderName').value = config.sender; document.getElementById('setReceiverName').value = config.receiver;
+        document.getElementById('setWebhook').value = config.webhook; document.getElementById('myCurrentPhoto').src = config.pic;
         document.getElementById('settingsModal').style.display = 'flex';
     };
     document.getElementById('clearChatAction').onclick = () => { if(confirm("બધું સાફ કરવું છે?")) remove(messagesRef).then(()=>location.reload()); };
