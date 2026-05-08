@@ -65,7 +65,7 @@
         
         .call-info-box { text-align: center; z-index: 2002; position: relative; }
         .call-user-name { font-size: 28px; font-weight: 500; margin-bottom: 8px; color: #fff; }
-        #callStatusText { font-size: 16px; color: #aebac1; letter-spacing: 0.5px; }
+        #callStatusText { font-size: 16px; color: #aebac1; letter-spacing: 0.5px; min-height: 20px; }
 
         .call-controls { display: flex; justify-content: space-around; width: 100%; max-width: 320px; z-index: 2003; margin-bottom: 20px; position: relative; }
         .call-btn { width: 62px; height: 62px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; border: none; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
@@ -238,13 +238,32 @@
     let replyingTo = null;
     let localMessages = {};
 
-    // Call Variables
+    // Call & Timer Variables
     let localStream;
     let peer;
+    let callTimerInterval;
+    let callSeconds = 0;
+    let currentCallType = 'audio';
     const myCallRef = ref(db, `calls/${config.sender}`);
 
     function getTimeFormatted() {
         return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    }
+
+    function formatCallTime(sec) {
+        const m = Math.floor(sec / 60).toString().padStart(2, '0');
+        const s = (sec % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+    }
+
+    function startCallTimer() {
+        clearInterval(callTimerInterval);
+        callSeconds = 0;
+        document.getElementById('callStatusText').innerText = "00:00";
+        callTimerInterval = setInterval(() => {
+            callSeconds++;
+            document.getElementById('callStatusText').innerText = formatCallTime(callSeconds);
+        }, 1000);
     }
 
     window.cancelReply = () => {
@@ -285,7 +304,11 @@
             const data = snapshot.val();
             if (!data) return;
             if (data.status === 'dialing') showIncomingCall(data);
-            else if (data.status === 'accepted' && peer && data.answerSignal) peer.signal(JSON.parse(data.answerSignal));
+            else if (data.status === 'accepted' && peer && data.answerSignal) {
+                peer.signal(JSON.parse(data.answerSignal));
+                if(data.type === 'audio') startCallTimer();
+                else document.getElementById('callStatusText').innerText = ""; 
+            }
             else if (data.status === 'ended') endCallUI();
         });
     }
@@ -293,12 +316,13 @@
     // --- Calling Logic ---
     async function startCall(isVideo) {
         try {
+            currentCallType = isVideo ? 'video' : 'audio';
             const receiverCallRef = ref(db, `calls/${config.receiver}`);
             localStream = await navigator.mediaDevices.getUserMedia({ video: isVideo, audio: true });
             
             document.getElementById('callOverlay').style.display = 'flex';
             document.getElementById('callUserName').innerText = config.receiver;
-            document.getElementById('callStatusText').innerText = isVideo ? "WhatsApp Video Call..." : "WhatsApp Voice Call...";
+            document.getElementById('callStatusText').innerText = isVideo ? "" : "Calling..."; 
             document.getElementById('acceptBtn').style.display = 'none';
 
             if(isVideo) {
@@ -315,7 +339,7 @@
                     to: config.receiver,
                     status: 'dialing',
                     signal: JSON.stringify(data),
-                    type: isVideo ? 'video' : 'audio',
+                    type: currentCallType,
                     timestamp: Date.now()
                 });
             });
@@ -324,7 +348,8 @@
                 const rVideo = document.getElementById('remoteVideo');
                 rVideo.srcObject = stream;
                 rVideo.style.display = 'block';
-                document.getElementById('callStatusText').innerText = "Ringing...";
+                if(currentCallType === 'audio') startCallTimer();
+                else document.getElementById('callStatusText').innerText = "";
             });
 
         } catch (err) {
@@ -333,9 +358,10 @@
     }
 
     function showIncomingCall(data) {
+        currentCallType = data.type;
         document.getElementById('callOverlay').style.display = 'flex';
         document.getElementById('callUserName').innerText = data.from;
-        document.getElementById('callStatusText').innerText = `Incoming WhatsApp ${data.type} call...`;
+        document.getElementById('callStatusText').innerText = data.type === 'audio' ? "WhatsApp Audio..." : ""; 
         document.getElementById('acceptBtn').style.display = 'flex';
 
         document.getElementById('acceptBtn').onclick = async () => {
@@ -347,6 +373,7 @@
                 if(data.type === 'video') {
                     document.getElementById('localVideo').style.display = 'block';
                     document.getElementById('localVideo').srcObject = localStream;
+                    document.getElementById('callStatusText').innerText = "";
                 }
 
                 if (peer) peer.destroy();
@@ -354,14 +381,15 @@
 
                 peer.on('signal', signalData => {
                     update(senderCallRef, { status: 'accepted', answerSignal: JSON.stringify(signalData) });
-                    update(myCallRef, { status: 'accepted' });
+                    update(myCallRef, { status: 'accepted', type: data.type });
                 });
 
                 peer.on('stream', stream => {
                     const rVideo = document.getElementById('remoteVideo');
                     rVideo.srcObject = stream;
                     rVideo.style.display = 'block';
-                    document.getElementById('callStatusText').innerText = "Connected";
+                    if(data.type === 'audio') startCallTimer();
+                    else document.getElementById('callStatusText').innerText = "";
                 });
 
                 peer.signal(JSON.parse(data.signal));
@@ -373,6 +401,7 @@
     }
 
     function endCallUI() {
+        clearInterval(callTimerInterval);
         if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; }
         if (peer) { peer.destroy(); peer = null; }
         document.getElementById('callOverlay').style.display = 'none';
@@ -380,6 +409,7 @@
         document.getElementById('localVideo').srcObject = null;
         document.getElementById('remoteVideo').style.display = 'none';
         document.getElementById('localVideo').style.display = 'none';
+        document.getElementById('callStatusText').innerText = "";
     }
 
     document.getElementById('endCallBtn').onclick = () => {
@@ -510,11 +540,21 @@
     document.getElementById('menuToggle').onclick = e => { e.stopPropagation(); dropdown.style.display = dropdown.style.display==='block'?'none':'block'; };
     document.getElementById('emojiToggle').onclick = e => { e.stopPropagation(); emojiMenu.style.display = emojiMenu.style.display==='grid'?'none':'grid'; };
     document.getElementById('attachToggle').onclick = e => { e.stopPropagation(); attachMenu.style.display = attachMenu.style.display==='grid'?'none':'grid'; };
+    
+    // Settings Security Feature
     document.getElementById('openSettings').onclick = () => {
-        document.getElementById('setSenderName').value = config.sender; document.getElementById('setReceiverName').value = config.receiver;
-        document.getElementById('setWebhook').value = config.webhook; document.getElementById('myCurrentPhoto').src = config.pic;
-        document.getElementById('settingsModal').style.display = 'flex';
+        const pwd = prompt("Settings ખોલવા માટે પાસવર્ડ નાખો:");
+        if (pwd === "252336") {
+            document.getElementById('setSenderName').value = config.sender; 
+            document.getElementById('setReceiverName').value = config.receiver;
+            document.getElementById('setWebhook').value = config.webhook; 
+            document.getElementById('myCurrentPhoto').src = config.pic;
+            document.getElementById('settingsModal').style.display = 'flex';
+        } else if (pwd !== null) {
+            alert("ખોટો પાસવર્ડ! તમે Settings એક્સેસ કરી શકતા નથી.");
+        }
     };
+
     document.getElementById('clearChatAction').onclick = () => { if(confirm("બધું સાફ કરવું છે?")) remove(messagesRef).then(()=>location.reload()); };
     document.onclick = () => { dropdown.style.display='none'; emojiMenu.style.display='none'; attachMenu.style.display='none'; };
 
