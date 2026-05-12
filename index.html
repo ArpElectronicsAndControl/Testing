@@ -46,6 +46,7 @@
         .reply-preview span { display: block; font-size: 12px; font-weight: bold; color: #075e54; }
         .close-reply { position: absolute; right: 5px; top: 5px; cursor: pointer; font-weight: bold; }
 
+        /* Context Menu */
         .context-menu { position: fixed; background: white; box-shadow: 0 2px 15px rgba(0,0,0,0.2); border-radius: 8px; display: none; z-index: 3000; width: 140px; overflow: hidden; }
         .context-menu div { padding: 12px 15px; cursor: pointer; font-size: 14px; color: #333; transition: background 0.2s; }
         .context-menu div:hover { background: #f5f5f5; }
@@ -292,8 +293,6 @@
             if(s.exists()){
                 const d = s.val();
                 const statusEl = document.getElementById('onlineStatus');
-                
-                // Typing status takes priority
                 if (d.typing) {
                     statusEl.innerText = 'Typing...';
                     statusEl.classList.add('online-active');
@@ -396,7 +395,6 @@
         };
         if (replyingTo) msgData.replyTo = replyingTo;
         push(messagesRef, msgData);
-        // Clear typing status immediately on send
         update(ref(db, `status/${config.sender}`), { typing: false });
         if(config.webhook && type === 'text') fetch(`${config.webhook}?from=${config.sender}&msg=${encodeURIComponent(content)}`).catch(()=>{});
     }
@@ -466,14 +464,30 @@
         }
     });
 
+    // Modified Context Menu Positioning Logic
     function showContextMenu(e, msgId) {
         selectedMsgId = msgId;
         const menu = document.getElementById('msgContextMenu');
         const m = localMessages[msgId];
+        
+        // Show/Hide Info based on sender
         document.getElementById('ctxInfo').style.display = (m.sender === config.sender) ? 'block' : 'none';
+        
         let x = e.pageX || (e.touches ? e.touches[0].pageX : 0);
         let y = e.pageY || (e.touches ? e.touches[0].pageY : 0);
-        menu.style.left = x + 'px'; menu.style.top = y + 'px'; menu.style.display = 'block';
+        
+        const menuWidth = 140; // Defined in CSS
+
+        // If it's a sent message (on the right side), show menu to the left of the click
+        if (m.sender === config.sender) {
+            menu.style.left = (x - menuWidth) + 'px';
+        } else {
+            // Otherwise, show menu to the right
+            menu.style.left = x + 'px';
+        }
+        
+        menu.style.top = y + 'px';
+        menu.style.display = 'block';
         e.preventDefault();
     }
 
@@ -505,11 +519,8 @@
     
     msgInput.oninput = () => {
         actionBtn.innerHTML = msgInput.value.trim() ? "➤" : "🎙️";
-        
-        // Typing Status Logic
         const myStatusRef = ref(db, `status/${config.sender}`);
         update(myStatusRef, { typing: true });
-        
         clearTimeout(typingTimeout);
         typingTimeout = setTimeout(() => {
             update(myStatusRef, { typing: false });
