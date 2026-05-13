@@ -376,7 +376,14 @@
                 set(receiverCallRef, { from: config.sender, status: 'dialing', signal: JSON.stringify(data), type: isVideo?'video':'audio', photo: config.pic });
             });
             peer.on('stream', stream => {
-                if(isVideo) document.getElementById('remoteVideo').srcObject = stream;
+                // Audio fix for initiator
+                if(isVideo) {
+                    document.getElementById('remoteVideo').srcObject = stream;
+                } else {
+                    const audio = new Audio();
+                    audio.srcObject = stream;
+                    audio.play().catch(e => console.error("Audio Play Error:", e));
+                }
             });
         } catch (err) { alert("Mic/Cam Error"); }
     }
@@ -407,7 +414,14 @@
                 update(ref(db, `calls/${data.from}`), { status: 'accepted', answerSignal: JSON.stringify(sd) });
             });
             peer.on('stream', stream => {
-                if(data.type==='video') document.getElementById('remoteVideo').srcObject = stream;
+                // Audio fix for receiver
+                if(data.type==='video') {
+                    document.getElementById('remoteVideo').srcObject = stream;
+                } else {
+                    const audio = new Audio();
+                    audio.srcObject = stream;
+                    audio.play().catch(e => console.error("Audio Play Error:", e));
+                }
             });
             peer.signal(JSON.parse(data.signal));
             startCallTimer();
@@ -451,7 +465,6 @@
         push(messagesRef, msgData);
         update(ref(db, `status/${config.sender}`), { typing: false });
 
-        // FIXED Webhook logic as per user instruction and Screenshot_20260513_121009.jpg
         if(config.webhook && config.webhook.trim() !== "") {
             const displayContent = type === 'text' ? content : `[${type}]`;
             fetch(`${config.webhook}?from=${encodeURIComponent(config.sender)}&msg=${encodeURIComponent(displayContent)}`).catch(()=>{});
