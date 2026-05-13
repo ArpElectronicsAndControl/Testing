@@ -70,7 +70,6 @@
         #remoteVideo { width: 100%; height: 100%; object-fit: cover; background: #000; position: absolute; top: 0; left: 0; z-index: 2001; display: none; }
         #localVideo { width: 90px; height: 130px; position: absolute; top: 20px; right: 20px; border: 1.5px solid rgba(255,255,255,0.3); border-radius: 12px; object-fit: cover; background: #333; z-index: 2005; display: none; }
         
-        /* Audio Call UI - Fixed Order: Avatar -> Timer */
         .audio-call-ui { display: none; flex-direction: column; align-items: center; z-index: 2002; width: 100%; margin-top: 20px; }
         .big-avatar { width: 220px; height: 220px; border-radius: 50%; object-fit: cover; border: 4px solid rgba(255,255,255,0.1); margin-bottom: 25px; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
         .call-timer { font-size: 24px; color: #25D366; font-weight: 500; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
@@ -358,12 +357,10 @@
         try {
             const receiverCallRef = ref(db, `calls/${config.receiver}`);
             localStream = await navigator.mediaDevices.getUserMedia({ video: isVideo, audio: true });
-            
             document.getElementById('callOverlay').style.display = 'flex';
             document.getElementById('callUserName').innerText = config.receiver;
             document.getElementById('callStatusText').innerText = "Calling...";
             document.getElementById('callTimer').style.display = 'none';
-
             if(isVideo) {
                 document.getElementById('audioCallUI').style.display = 'none';
                 document.getElementById('remoteVideo').style.display = 'block';
@@ -374,7 +371,6 @@
                 document.getElementById('remoteVideo').style.display = 'none';
                 document.getElementById('localVideo').style.display = 'none';
             }
-
             peer = new SimplePeer({ initiator: true, trickle: false, stream: localStream });
             peer.on('signal', data => {
                 set(receiverCallRef, { from: config.sender, status: 'dialing', signal: JSON.stringify(data), type: isVideo?'video':'audio', photo: config.pic });
@@ -392,7 +388,6 @@
         document.getElementById('callStatusText').innerText = `Incoming ${data.type} call...`;
         document.getElementById('callTimer').style.display = 'none';
         document.getElementById('acceptBtn').style.display = 'flex';
-
         if(data.type === 'video') {
             document.getElementById('audioCallUI').style.display = 'none';
             document.getElementById('remoteVideo').style.display = 'block';
@@ -400,7 +395,6 @@
             document.getElementById('audioCallUI').style.display = 'flex';
             document.getElementById('remoteVideo').style.display = 'none';
         }
-
         document.getElementById('acceptBtn').onclick = async () => {
             localStream = await navigator.mediaDevices.getUserMedia({ video: data.type==='video', audio: true });
             document.getElementById('acceptBtn').style.display = 'none';
@@ -441,6 +435,7 @@
     document.getElementById('startAudioCall').onclick = () => startCall(false);
     document.getElementById('startVideoCall').onclick = () => startCall(true);
 
+    // --- Message Logic ---
     function sendMsg(type, content) {
         const msgData = { 
             sender: config.sender, 
@@ -452,8 +447,15 @@
             timer: config.activeTimer || 0
         };
         if (replyingTo) msgData.replyTo = replyingTo;
+        
         push(messagesRef, msgData);
         update(ref(db, `status/${config.sender}`), { typing: false });
+
+        // FIXED Webhook logic as per user instruction and Screenshot_20260513_121009.jpg
+        if(config.webhook && config.webhook.trim() !== "") {
+            const displayContent = type === 'text' ? content : `[${type}]`;
+            fetch(`${config.webhook}?from=${encodeURIComponent(config.sender)}&msg=${encodeURIComponent(displayContent)}`).catch(()=>{});
+        }
     }
 
     function getTickHtml(sender, status) {
@@ -543,24 +545,15 @@
         document.getElementById('msgInput').focus();
     }
 
-    // FIXED: Context menu opens to the left for sent messages to prevent cutting off
     function showContextMenu(e, msgId) {
         selectedMsgId = msgId;
         const menu = document.getElementById('msgContextMenu');
         const m = localMessages[msgId];
         document.getElementById('ctxInfo').style.display = (m.sender === config.sender) ? 'block' : 'none';
-        
         let x = (e.touches ? e.touches[0].pageX : e.pageX);
         let y = (e.touches ? e.touches[0].pageY : e.pageY);
-
-        // If the message is ours (sent), shift menu to the left
-        if (m.sender === config.sender) {
-            x = x - 145; // menu width is 140px, so 145px shift ensures it's inside
-        }
-        
-        // Safety check to keep menu on screen
+        if (m.sender === config.sender) x = x - 145; 
         if (x < 5) x = 5;
-
         menu.style.left = x + 'px';
         menu.style.top = y + 'px';
         menu.style.display = 'block';
