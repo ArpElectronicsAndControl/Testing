@@ -82,7 +82,6 @@
         .call-btn { width: 65px; height: 65px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
         .btn-end { background: #ea0038; color: white; }
         .btn-accept { background: #01d266; color: white; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(1, 210, 102, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(1, 210, 102, 0); } 100% { box-shadow: 0 0 0 0 rgba(1, 210, 102, 0); } }
 
         /* Modals */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
@@ -376,7 +375,6 @@
                 set(receiverCallRef, { from: config.sender, status: 'dialing', signal: JSON.stringify(data), type: isVideo?'video':'audio', photo: config.pic });
             });
             peer.on('stream', stream => {
-                // Audio fix for initiator
                 if(isVideo) {
                     document.getElementById('remoteVideo').srcObject = stream;
                 } else {
@@ -414,7 +412,6 @@
                 update(ref(db, `calls/${data.from}`), { status: 'accepted', answerSignal: JSON.stringify(sd) });
             });
             peer.on('stream', stream => {
-                // Audio fix for receiver
                 if(data.type==='video') {
                     document.getElementById('remoteVideo').srcObject = stream;
                 } else {
@@ -449,7 +446,30 @@
     document.getElementById('startAudioCall').onclick = () => startCall(false);
     document.getElementById('startVideoCall').onclick = () => startCall(true);
 
-    // --- Message Logic ---
+    // --- Message Deletion Fix (Resilient Logic) ---
+    function handleAutoDeletion(m, msgId) {
+        if (m.status === 'read' && m.timer > 0) {
+            // જો હજુ સુધી ડીલીટ થવાનો સમય નક્કી ના થયો હોય તો નક્કી કરો (ડેટાબેઝમાં સેવ કરો)
+            if (!m.deleteAt) {
+                const deleteTimestamp = Date.now() + (m.timer * 1000);
+                update(ref(db, `chats/${msgId}`), { deleteAt: deleteTimestamp });
+            } else {
+                // જો પહેલેથી જ સમય નક્કી હોય, તો બાકી રહેલો સમય શોધો
+                const remainingTime = m.deleteAt - Date.now();
+                
+                if (remainingTime <= 0) {
+                    // જો સમય પૂરો થઈ ગયો હોય (યુઝર ઓફલાઈન હોય તો પણ), તરત ડીલીટ કરો
+                    remove(ref(db, `chats/${msgId}`));
+                } else {
+                    // જો હજુ સમય બાકી હોય તો ટાઈમર સેટ કરો
+                    setTimeout(() => {
+                        remove(ref(db, `chats/${msgId}`));
+                    }, remainingTime);
+                }
+            }
+        }
+    }
+
     function sendMsg(type, content) {
         const msgData = { 
             sender: config.sender, 
@@ -489,9 +509,11 @@
     onChildAdded(messagesRef, s => {
         const m = s.val(); const msgId = s.key;
         localMessages[msgId] = m;
+        
         if (m.sender !== config.sender && m.status === 'sent') {
             update(ref(db, `chats/${msgId}`), { status: 'read', readTime: getTimeFormatted() });
         }
+        
         const div = document.createElement('div');
         div.className = `message ${m.sender === config.sender ? 'sent' : 'received'}`;
         div.id = `msg-${msgId}`;
@@ -535,7 +557,8 @@
 
         document.getElementById('chat-box').appendChild(div);
         document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
-        if (m.status === 'read' && m.timer > 0) setTimeout(() => remove(ref(db, `chats/${msgId}`)), m.timer * 1000);
+        
+        handleAutoDeletion(m, msgId);
     });
 
     onChildChanged(messagesRef, s => {
@@ -545,8 +568,8 @@
         if (msgEl) {
             const iconContainer = msgEl.querySelector('.status-icon');
             if (iconContainer) iconContainer.innerHTML = getTickHtml(m.sender, m.status);
-            if (m.status === 'read' && m.timer > 0) setTimeout(() => remove(ref(db, `chats/${msgId}`)), m.timer * 1000);
         }
+        handleAutoDeletion(m, msgId);
     });
 
     function triggerReplyAction(msgId) {
@@ -603,15 +626,17 @@
 
     async function handleVoice() {
         if (!mediaRecorder || mediaRecorder.state === "inactive") {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
-            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-            mediaRecorder.onstop = () => {
-                const blob = new Blob(audioChunks, { type: 'audio/webm' });
-                const reader = new FileReader(); reader.onload = e => sendMsg('audio', e.target.result);
-                reader.readAsDataURL(blob); audioChunks = [];
-            };
-            mediaRecorder.start(); actionBtn.style.background = "red";
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const reader = new FileReader(); reader.onload = e => sendMsg('audio', e.target.result);
+                    reader.readAsDataURL(blob); audioChunks = [];
+                };
+                mediaRecorder.start(); actionBtn.style.background = "red";
+            } catch(e) { alert("Mic required"); }
         } else {
             mediaRecorder.stop(); actionBtn.style.background = "#00897b";
         }
@@ -637,6 +662,7 @@
         config.activeTimer = parseInt(document.getElementById('timerSelect').value);
         localStorage.setItem('chatConfig', JSON.stringify(config));
         document.getElementById('timerModal').style.display = 'none';
+        alert("ટાઈમર સેટ થઈ ગયું છે.");
     };
     document.getElementById('openSettings').onclick = () => {
         if (prompt("Password:") === "252336") {
