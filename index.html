@@ -28,7 +28,6 @@
 
         #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
         
-        /* Message styling with transition for swipe */
         .message { margin-bottom: 10px; padding: 8px 12px; border-radius: 8px; max-width: 85%; word-wrap: break-word; font-size: 15px; box-shadow: 0 1px 1px rgba(0,0,0,0.1); position: relative; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform 0.2s ease-out, background-color 0.5s ease, opacity 0.3s ease; will-change: transform; }
         .sent { align-self: flex-end; background: #dcf8c6; border-bottom-right-radius: 2px; }
         .received { align-self: flex-start; background: white; border-bottom-left-radius: 2px; }
@@ -66,24 +65,34 @@
         input[type="text"] { flex: 1; border: none; outline: none; padding: 10px 5px; font-size: 16px; background: transparent; }
         .action-btn { background: #00897b; color: white; width: 48px; height: 48px; border-radius: 50%; display: flex; justify-content: center; align-items: center; border: none; font-size: 20px; cursor: pointer; flex-shrink: 0; }
 
-        #callOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0b141a; z-index: 2000; flex-direction: column; align-items: center; justify-content: space-between; color: white; padding: 60px 0; }
+        /* Call Overlay */
+        #callOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0b141a; z-index: 2000; flex-direction: column; align-items: center; justify-content: space-between; color: white; padding: 40px 0; }
         #remoteVideo { width: 100%; height: 100%; object-fit: cover; background: #000; position: absolute; top: 0; left: 0; z-index: 2001; display: none; }
         #localVideo { width: 90px; height: 130px; position: absolute; top: 20px; right: 20px; border: 1.5px solid rgba(255,255,255,0.3); border-radius: 12px; object-fit: cover; background: #333; z-index: 2005; display: none; }
-        .call-info-box { text-align: center; z-index: 2002; position: relative; }
-        .call-user-name { font-size: 28px; font-weight: 500; margin-bottom: 8px; color: #fff; }
-        #callStatusText { font-size: 16px; color: #aebac1; letter-spacing: 0.5px; min-height: 20px; }
-        .call-controls { display: flex; justify-content: space-around; width: 100%; max-width: 320px; z-index: 2003; margin-bottom: 20px; position: relative; }
-        .call-btn { width: 62px; height: 62px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; border: none; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
-        .btn-end { background: #ea0038; color: white; }
-        .btn-accept { background: #01d266; color: white; animation: pulse-green 2s infinite; }
+        
+        /* Audio Call UI - Fixed Order: Avatar -> Timer */
+        .audio-call-ui { display: none; flex-direction: column; align-items: center; z-index: 2002; width: 100%; margin-top: 20px; }
+        .big-avatar { width: 220px; height: 220px; border-radius: 50%; object-fit: cover; border: 4px solid rgba(255,255,255,0.1); margin-bottom: 25px; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
+        .call-timer { font-size: 24px; color: #25D366; font-weight: 500; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
 
+        .call-info-box { text-align: center; z-index: 2002; position: relative; width: 100%; }
+        .call-user-name { font-size: 28px; font-weight: 500; margin-bottom: 8px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        #callStatusText { font-size: 16px; color: #aebac1; letter-spacing: 0.5px; }
+
+        .call-controls { display: flex; justify-content: space-around; width: 100%; max-width: 320px; z-index: 2003; margin-bottom: 20px; }
+        .call-btn { width: 65px; height: 65px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+        .btn-end { background: #ea0038; color: white; }
+        .btn-accept { background: #01d266; color: white; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(1, 210, 102, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(1, 210, 102, 0); } 100% { box-shadow: 0 0 0 0 rgba(1, 210, 102, 0); } }
+
+        /* Modals */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
         .modal-header { color: #075e54; border-bottom: 2px solid #075e54; margin-bottom: 20px; padding-bottom: 5px; font-size: 1.2rem; font-weight: bold; }
         #myCurrentPhoto { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #075e54; display: block; margin: 0 auto 20px auto; background: #eee; }
         .setting-group { margin-bottom: 15px; }
         .setting-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #333; font-size: 14px; }
-        .setting-group input[type="text"], .setting-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; background: #f9f9f9; }
+        .setting-group input[type="text"], .setting-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
         .modal-footer { margin-top: 25px; display: flex; justify-content: flex-end; gap: 10px; }
         .modal-footer button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .btn-cancel { background: #eee; color: #333; }
@@ -91,7 +100,6 @@
         .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
         .info-label { color: #667781; font-size: 14px; }
         .info-time { font-weight: 500; color: #333; font-size: 14px; }
-        
         .timer-badge { font-size: 10px; background: #eceff1; padding: 2px 5px; border-radius: 4px; margin-right: 5px; color: #546e7a; }
     </style>
 </head>
@@ -158,6 +166,51 @@
     <div id="ctxDelete" style="color: #ea0038;">🗑️ Delete</div>
 </div>
 
+<div id="callOverlay">
+    <div class="call-info-box">
+        <div class="call-user-name" id="callUserName">Manisha ❤️</div>
+        <div id="callStatusText">Calling...</div>
+    </div>
+
+    <div class="audio-call-ui" id="audioCallUI">
+        <img id="callBigAvatar" class="big-avatar" src="">
+        <div class="call-timer" id="callTimer" style="display:none;">00:00</div>
+    </div>
+    
+    <video id="remoteVideo" autoplay playsinline></video>
+    <video id="localVideo" autoplay muted playsinline></video>
+    
+    <div class="call-controls">
+        <button class="call-btn btn-end" id="endCallBtn">✕</button>
+        <button class="call-btn btn-accept" id="acceptBtn" style="display:none;">📞</button>
+    </div>
+</div>
+
+<input type="file" id="fileInput" accept="image/*" style="display:none">
+<input type="file" id="camInput" accept="image/*" capture="camera" style="display:none">
+
+<div class="modal" id="settingsModal">
+    <div class="modal-content">
+        <div class="modal-header">Settings</div>
+        <img id="myCurrentPhoto" src="">
+        <div class="setting-group"><label>Sender Name:</label><input type="text" id="setSenderName"></div>
+        <div class="setting-group"><label>Receiver Name:</label><input type="text" id="setReceiverName"></div>
+        <div class="setting-group">
+            <label>My Profile Pic:</label>
+            <input type="file" id="profileFile" accept="image/*">
+            <div id="cropper-container" style="display:none; margin-top: 15px;">
+                <div id="crop-resizer"></div>
+                <button id="cropBtn" style="width:100%; background:#128c7e; color:white; padding:8px; border:none; border-radius:5px; margin-top:10px;">Confirm Photo</button>
+            </div>
+        </div>
+        <div class="setting-group"><label>My Webhook URL:</label><input type="text" id="setWebhook"></div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="document.getElementById('settingsModal').style.display='none'">Cancel</button>
+            <button class="btn-save" id="saveSettingsBtn">Save</button>
+        </div>
+    </div>
+</div>
+
 <div class="modal" id="timerModal">
     <div class="modal-content">
         <div class="modal-header">Message Timer</div>
@@ -177,56 +230,18 @@
     </div>
 </div>
 
-<div id="callOverlay">
-    <div class="call-info-box">
-        <div class="call-user-name" id="callUserName">Manisha ❤️</div>
-        <div id="callStatusText">WhatsApp calling...</div>
-    </div>
-    <video id="remoteVideo" autoplay playsinline></video>
-    <video id="localVideo" autoplay muted playsinline></video>
-    <div class="call-controls">
-        <button class="call-btn btn-end" id="endCallBtn">✕</button>
-        <button class="call-btn btn-accept" id="acceptBtn" style="display:none;">📞</button>
-    </div>
-</div>
-
-<input type="file" id="fileInput" accept="image/*" style="display:none">
-<input type="file" id="camInput" accept="image/*" capture="camera" style="display:none">
-
 <div class="modal" id="infoModal">
     <div class="modal-content">
         <div class="modal-header">Message Info</div>
         <div class="info-row"><span class="info-label">✓ Sent:</span><span class="info-time" id="infoSentTime">-</span></div>
-        <div class="info-row"><span class="info-label">✓✓ Read:</span><span class="info-time" id="infoReadTime">Not read yet</span></div>
+        <div class="info-row"><span class="info-label">✓✓ Read:</span><span class="info-time" id="infoReadTime">-</span></div>
         <div class="modal-footer"><button class="btn-save" onclick="document.getElementById('infoModal').style.display='none'">OK</button></div>
-    </div>
-</div>
-
-<div class="modal" id="settingsModal">
-    <div class="modal-content">
-        <div class="modal-header">Settings</div>
-        <img id="myCurrentPhoto" src="">
-        <div class="setting-group"><label>Sender Name (My Name):</label><input type="text" id="setSenderName"></div>
-        <div class="setting-group"><label>Receiver Name (Partner Name):</label><input type="text" id="setReceiverName"></div>
-        <div class="setting-group">
-            <label>My Profile Pic:</label>
-            <input type="file" id="profileFile" accept="image/*">
-            <div id="cropper-container" style="display:none; margin-top: 15px; padding: 10px; border: 1px dashed #075e54;">
-                <div id="crop-resizer"></div>
-                <button id="cropBtn" style="width:100%; background:#128c7e; color:white; padding:8px; border:none; border-radius:5px; margin-top:10px;">Confirm Photo</button>
-            </div>
-        </div>
-        <div class="setting-group"><label>My Webhook URL:</label><input type="text" id="setWebhook"></div>
-        <div class="modal-footer">
-            <button class="btn-cancel" onclick="document.getElementById('settingsModal').style.display='none'">Cancel</button>
-            <button class="btn-save" id="saveSettingsBtn">Save</button>
-        </div>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, push, onChildAdded, remove, onValue, update, onDisconnect, onChildChanged, set, onChildRemoved } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, push, onChildAdded, remove, onValue, update, onDisconnect, set, onChildRemoved, onChildChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyB4nqUWM_raMKoEXEmpX7KpFAwEm4B6nVU",
@@ -254,6 +269,8 @@
 
     let localStream;
     let peer;
+    let callTimerInterval;
+    let callSeconds = 0;
     const myCallRef = ref(db, `calls/${config.sender}`);
 
     function getTimeFormatted() {
@@ -303,7 +320,10 @@
                     statusEl.innerText = `Last seen at ${d.last_seen || "recently"}`;
                     statusEl.classList.remove('online-active');
                 }
-                if(d.photo) document.getElementById('displayPic').src = d.photo;
+                if(d.photo) {
+                    document.getElementById('displayPic').src = d.photo;
+                    document.getElementById('callBigAvatar').src = d.photo;
+                }
             }
         });
 
@@ -311,31 +331,56 @@
             const data = snapshot.val();
             if (!data) return;
             if (data.status === 'dialing') showIncomingCall(data);
-            else if (data.status === 'accepted' && peer && data.answerSignal) peer.signal(JSON.parse(data.answerSignal));
+            else if (data.status === 'accepted' && peer && data.answerSignal) {
+                peer.signal(JSON.parse(data.answerSignal));
+                startCallTimer();
+            }
             else if (data.status === 'ended') endCallUI();
         });
+    }
+
+    function startCallTimer() {
+        clearInterval(callTimerInterval);
+        callSeconds = 0;
+        const timerEl = document.getElementById('callTimer');
+        const statusEl = document.getElementById('callStatusText');
+        timerEl.style.display = 'block';
+        statusEl.innerText = "In call";
+        callTimerInterval = setInterval(() => {
+            callSeconds++;
+            let m = Math.floor(callSeconds / 60).toString().padStart(2, '0');
+            let s = (callSeconds % 60).toString().padStart(2, '0');
+            timerEl.innerText = `${m}:${s}`;
+        }, 1000);
     }
 
     async function startCall(isVideo) {
         try {
             const receiverCallRef = ref(db, `calls/${config.receiver}`);
             localStream = await navigator.mediaDevices.getUserMedia({ video: isVideo, audio: true });
+            
             document.getElementById('callOverlay').style.display = 'flex';
             document.getElementById('callUserName').innerText = config.receiver;
             document.getElementById('callStatusText').innerText = "Calling...";
+            document.getElementById('callTimer').style.display = 'none';
+
             if(isVideo) {
+                document.getElementById('audioCallUI').style.display = 'none';
+                document.getElementById('remoteVideo').style.display = 'block';
                 document.getElementById('localVideo').style.display = 'block';
                 document.getElementById('localVideo').srcObject = localStream;
+            } else {
+                document.getElementById('audioCallUI').style.display = 'flex';
+                document.getElementById('remoteVideo').style.display = 'none';
+                document.getElementById('localVideo').style.display = 'none';
             }
+
             peer = new SimplePeer({ initiator: true, trickle: false, stream: localStream });
             peer.on('signal', data => {
-                set(receiverCallRef, { from: config.sender, status: 'dialing', signal: JSON.stringify(data), type: isVideo?'video':'audio' });
+                set(receiverCallRef, { from: config.sender, status: 'dialing', signal: JSON.stringify(data), type: isVideo?'video':'audio', photo: config.pic });
             });
             peer.on('stream', stream => {
-                const rVideo = document.getElementById('remoteVideo');
-                rVideo.srcObject = stream;
-                rVideo.style.display = 'block';
-                document.getElementById('callStatusText').innerText = "";
+                if(isVideo) document.getElementById('remoteVideo').srcObject = stream;
             });
         } catch (err) { alert("Mic/Cam Error"); }
     }
@@ -343,8 +388,19 @@
     function showIncomingCall(data) {
         document.getElementById('callOverlay').style.display = 'flex';
         document.getElementById('callUserName').innerText = data.from;
+        document.getElementById('callBigAvatar').src = data.photo || "";
         document.getElementById('callStatusText').innerText = `Incoming ${data.type} call...`;
+        document.getElementById('callTimer').style.display = 'none';
         document.getElementById('acceptBtn').style.display = 'flex';
+
+        if(data.type === 'video') {
+            document.getElementById('audioCallUI').style.display = 'none';
+            document.getElementById('remoteVideo').style.display = 'block';
+        } else {
+            document.getElementById('audioCallUI').style.display = 'flex';
+            document.getElementById('remoteVideo').style.display = 'none';
+        }
+
         document.getElementById('acceptBtn').onclick = async () => {
             localStream = await navigator.mediaDevices.getUserMedia({ video: data.type==='video', audio: true });
             document.getElementById('acceptBtn').style.display = 'none';
@@ -357,20 +413,22 @@
                 update(ref(db, `calls/${data.from}`), { status: 'accepted', answerSignal: JSON.stringify(sd) });
             });
             peer.on('stream', stream => {
-                const rVideo = document.getElementById('remoteVideo');
-                rVideo.srcObject = stream;
-                rVideo.style.display = 'block';
-                document.getElementById('callStatusText').innerText = "";
+                if(data.type==='video') document.getElementById('remoteVideo').srcObject = stream;
             });
             peer.signal(JSON.parse(data.signal));
+            startCallTimer();
         };
     }
 
     function endCallUI() {
+        clearInterval(callTimerInterval);
         if (localStream) localStream.getTracks().forEach(t => t.stop());
         if (peer) peer.destroy();
         document.getElementById('callOverlay').style.display = 'none';
         document.getElementById('remoteVideo').style.display = 'none';
+        document.getElementById('localVideo').style.display = 'none';
+        document.getElementById('callTimer').style.display = 'none';
+        peer = null;
     }
 
     document.getElementById('endCallBtn').onclick = () => {
@@ -396,7 +454,6 @@
         if (replyingTo) msgData.replyTo = replyingTo;
         push(messagesRef, msgData);
         update(ref(db, `status/${config.sender}`), { typing: false });
-        if(config.webhook && type === 'text') fetch(`${config.webhook}?from=${config.sender}&msg=${encodeURIComponent(content)}`).catch(()=>{});
     }
 
     function getTickHtml(sender, status) {
@@ -417,85 +474,53 @@
     onChildAdded(messagesRef, s => {
         const m = s.val(); const msgId = s.key;
         localMessages[msgId] = m;
-        
         if (m.sender !== config.sender && m.status === 'sent') {
             update(ref(db, `chats/${msgId}`), { status: 'read', readTime: getTimeFormatted() });
         }
-        
         const div = document.createElement('div');
         div.className = `message ${m.sender === config.sender ? 'sent' : 'received'}`;
         div.id = `msg-${msgId}`;
-        
         let timerLabel = (m.timer > 0) ? `<span class="timer-badge">⏳ ${m.timer}s</span>` : '';
         let replyHtml = m.replyTo ? `<div class="reply-container" onclick="scrollToMessage('${m.replyTo.id}')"><strong>${m.replyTo.sender === config.sender ? "You" : m.replyTo.sender}</strong><br>${m.replyTo.content.substring(0, 50)}</div>` : '';
         let contentHtml = m.type === 'image' ? `<img src="${m.content}" class="chat-img">` : (m.type === 'audio' ? `<audio controls src="${m.content}" style="width:200px;"></audio>` : `<div>${m.content}</div>`);
-        
         div.innerHTML = `${replyHtml}${contentHtml}<div class="msg-info">${timerLabel}<span class="msg-time">${m.time}</span><span class="status-icon">${getTickHtml(m.sender, m.status)}</span></div>`;
         
-        // --- Long Press Logic ---
         let pressTimer;
-        const startPress = (e) => pressTimer = setTimeout(() => showContextMenu(e, msgId), 600);
-        const endPress = () => clearTimeout(pressTimer);
-
-        // --- Swipe to Reply Logic ---
-        let startX = 0;
-        let diffX = 0;
-        let isSwiping = false;
+        let startX = 0, diffX = 0, isSwiping = false;
 
         const touchStart = (e) => {
             startX = e.touches[0].clientX;
             isSwiping = true;
-            div.style.transition = 'none'; // Disable transition during drag
-            startPress(e);
+            div.style.transition = 'none';
+            pressTimer = setTimeout(() => showContextMenu(e, msgId), 600);
         };
 
         const touchMove = (e) => {
             if (!isSwiping) return;
             let currentX = e.touches[0].clientX;
             diffX = currentX - startX;
-
-            // Trigger Movement Feedback
-            // Sent message: only swipe left (negative diffX)
-            // Received message: only swipe right (positive diffX)
-            if (m.sender === config.sender && diffX < 0) {
-                if (Math.abs(diffX) > 10) e.preventDefault(); // Prevent scroll
-                div.style.transform = `translateX(${diffX}px)`;
-            } else if (m.sender !== config.sender && diffX > 0) {
-                if (diffX > 10) e.preventDefault(); // Prevent scroll
-                div.style.transform = `translateX(${diffX}px)`;
-            }
-            
-            if (Math.abs(diffX) > 10) endPress(); // If swiping, cancel long press
+            if (m.sender === config.sender && diffX < 0) div.style.transform = `translateX(${diffX}px)`;
+            else if (m.sender !== config.sender && diffX > 0) div.style.transform = `translateX(${diffX}px)`;
+            if (Math.abs(diffX) > 10) clearTimeout(pressTimer);
         };
 
         const touchEnd = () => {
             isSwiping = false;
             div.style.transition = 'transform 0.2s ease-out';
             div.style.transform = 'translateX(0px)';
-            
-            // Check if swipe was far enough to trigger reply (60px)
-            if (m.sender === config.sender && diffX < -60) {
-                triggerReplyAction(msgId);
-            } else if (m.sender !== config.sender && diffX > 60) {
-                triggerReplyAction(msgId);
-            }
-            
+            if (m.sender === config.sender && diffX < -60) triggerReplyAction(msgId);
+            else if (m.sender !== config.sender && diffX > 60) triggerReplyAction(msgId);
             diffX = 0;
-            endPress();
+            clearTimeout(pressTimer);
         };
 
         div.addEventListener('touchstart', touchStart, {passive: false});
         div.addEventListener('touchmove', touchMove, {passive: false});
         div.addEventListener('touchend', touchEnd);
-        div.addEventListener('mousedown', startPress);
-        div.addEventListener('mouseup', endPress);
 
         document.getElementById('chat-box').appendChild(div);
         document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
-        
-        if (m.status === 'read' && m.timer > 0) {
-            setTimeout(() => remove(ref(db, `chats/${msgId}`)), m.timer * 1000);
-        }
+        if (m.status === 'read' && m.timer > 0) setTimeout(() => remove(ref(db, `chats/${msgId}`)), m.timer * 1000);
     });
 
     onChildChanged(messagesRef, s => {
@@ -503,13 +528,9 @@
         localMessages[msgId] = m;
         const msgEl = document.getElementById(`msg-${msgId}`);
         if (msgEl) {
-            if (m.sender === config.sender) {
-                const iconContainer = msgEl.querySelector('.status-icon');
-                if (iconContainer) iconContainer.innerHTML = getTickHtml(m.sender, m.status);
-            }
-            if (m.status === 'read' && m.timer > 0) {
-                setTimeout(() => remove(ref(db, `chats/${msgId}`)), m.timer * 1000);
-            }
+            const iconContainer = msgEl.querySelector('.status-icon');
+            if (iconContainer) iconContainer.innerHTML = getTickHtml(m.sender, m.status);
+            if (m.status === 'read' && m.timer > 0) setTimeout(() => remove(ref(db, `chats/${msgId}`)), m.timer * 1000);
         }
     });
 
@@ -522,23 +543,25 @@
         document.getElementById('msgInput').focus();
     }
 
+    // FIXED: Context menu opens to the left for sent messages to prevent cutting off
     function showContextMenu(e, msgId) {
         selectedMsgId = msgId;
         const menu = document.getElementById('msgContextMenu');
         const m = localMessages[msgId];
-        
         document.getElementById('ctxInfo').style.display = (m.sender === config.sender) ? 'block' : 'none';
         
         let x = (e.touches ? e.touches[0].pageX : e.pageX);
         let y = (e.touches ? e.touches[0].pageY : e.pageY);
-        
-        const menuWidth = 140; 
+
+        // If the message is ours (sent), shift menu to the left
         if (m.sender === config.sender) {
-            menu.style.left = (x - menuWidth) + 'px';
-        } else {
-            menu.style.left = x + 'px';
+            x = x - 145; // menu width is 140px, so 145px shift ensures it's inside
         }
         
+        // Safety check to keep menu on screen
+        if (x < 5) x = 5;
+
+        menu.style.left = x + 'px';
         menu.style.top = y + 'px';
         menu.style.display = 'block';
         if(e.cancelable) e.preventDefault();
@@ -546,35 +569,25 @@
 
     document.getElementById('ctxDelete').onclick = () => {
         if(selectedMsgId && confirm("મેસેજ ડીલીટ કરવો છે?")) remove(ref(db, `chats/${selectedMsgId}`));
-        document.getElementById('msgContextMenu').style.display = 'none';
     };
 
-    document.getElementById('ctxReply').onclick = () => {
-        triggerReplyAction(selectedMsgId);
-        document.getElementById('msgContextMenu').style.display = 'none';
-    };
+    document.getElementById('ctxReply').onclick = () => triggerReplyAction(selectedMsgId);
 
     document.getElementById('ctxInfo').onclick = () => {
         const m = localMessages[selectedMsgId];
         document.getElementById('infoSentTime').innerText = m.sentTime || m.time;
         document.getElementById('infoReadTime').innerText = m.readTime || "Not read yet";
         document.getElementById('infoModal').style.display = 'flex';
-        document.getElementById('msgContextMenu').style.display = 'none';
     };
 
     const msgInput = document.getElementById('msgInput');
     const actionBtn = document.getElementById('actionBtn');
-    
     msgInput.oninput = () => {
         actionBtn.innerHTML = msgInput.value.trim() ? "➤" : "🎙️";
-        const myStatusRef = ref(db, `status/${config.sender}`);
-        update(myStatusRef, { typing: true });
+        update(ref(db, `status/${config.sender}`), { typing: true });
         clearTimeout(typingTimeout);
-        typingTimeout = setTimeout(() => {
-            update(myStatusRef, { typing: false });
-        }, 2000);
+        typingTimeout = setTimeout(() => update(ref(db, `status/${config.sender}`), { typing: false }), 2000);
     };
-    
     actionBtn.onclick = () => {
         if (msgInput.value.trim()) { 
             sendMsg('text', msgInput.value.trim()); msgInput.value = ""; 
@@ -613,17 +626,12 @@
 
     document.getElementById('fileInput').onchange = e => compressAndSend(e.target.files[0]);
     document.getElementById('camInput').onchange = e => compressAndSend(e.target.files[0]);
-
-    document.getElementById('openTimerSettings').onclick = () => {
-        document.getElementById('timerModal').style.display = 'flex';
-    };
-
+    document.getElementById('openTimerSettings').onclick = () => document.getElementById('timerModal').style.display = 'flex';
     document.getElementById('saveTimerBtn').onclick = () => {
         config.activeTimer = parseInt(document.getElementById('timerSelect').value);
         localStorage.setItem('chatConfig', JSON.stringify(config));
         document.getElementById('timerModal').style.display = 'none';
     };
-
     document.getElementById('openSettings').onclick = () => {
         if (prompt("Password:") === "252336") {
             document.getElementById('setSenderName').value = config.sender;
@@ -632,13 +640,11 @@
             document.getElementById('settingsModal').style.display = 'flex';
         }
     };
-
     document.getElementById('saveSettingsBtn').onclick = () => {
         config = { ...config, sender: document.getElementById('setSenderName').value, receiver: document.getElementById('setReceiverName').value, webhook: document.getElementById('setWebhook').value, pic: tempPicUrl };
         localStorage.setItem('chatConfig', JSON.stringify(config));
         location.reload();
     };
-
     document.getElementById('profileFile').onchange = e => {
         const reader = new FileReader(); reader.onload = event => {
             document.getElementById('cropper-container').style.display = 'block';
@@ -648,7 +654,6 @@
         };
         reader.readAsDataURL(e.target.files[0]);
     };
-
     document.getElementById('cropBtn').onclick = async () => {
         tempPicUrl = await croppieInstance.result({ type: 'base64', size: 'viewport' });
         document.getElementById('myCurrentPhoto').src = tempPicUrl;
@@ -659,14 +664,9 @@
     document.getElementById('emojiToggle').onclick = e => { e.stopPropagation(); emojiMenu.style.display = emojiMenu.style.display==='grid'?'none':'grid'; };
     document.getElementById('attachToggle').onclick = e => { e.stopPropagation(); attachMenu.style.display = attachMenu.style.display==='grid'?'none':'grid'; };
     document.querySelectorAll('.emoji-item').forEach(e => e.onclick = () => { msgInput.value += e.innerText; actionBtn.innerHTML = "➤"; });
-    
     document.onclick = () => { 
-        document.getElementById('dropdown').style.display='none'; 
-        document.getElementById('emojiMenu').style.display='none'; 
-        document.getElementById('attachMenu').style.display='none'; 
-        document.getElementById('msgContextMenu').style.display='none';
+        document.querySelectorAll('.dropdown-menu, .emoji-menu, .attach-menu, .context-menu').forEach(m => m.style.display = 'none');
     };
-
     document.getElementById('clearChatAction').onclick = () => { if(confirm("બધું સાફ કરવું છે?")) remove(messagesRef).then(()=>location.reload()); };
 
     init();
